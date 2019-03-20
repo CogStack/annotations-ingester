@@ -7,6 +7,13 @@ This simple application implements an ingestion process to:
 
 The ingestion process can be configured in `congif.yaml` file.
 
+# Usage
+
+Firstly install the Python libraries specified in `requirements.txt`.
+
+To run:
+`python main.py --config config.yaml`
+
 
 # TODO:
 - tests
