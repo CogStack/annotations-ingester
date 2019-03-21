@@ -2,6 +2,7 @@
 
 import elasticsearch
 import elasticsearch.helpers
+import utils
 
 
 ################################
@@ -45,6 +46,13 @@ class ElasticConnector:
                                                   http_auth=http_auth)
         else:
             self.es = elasticsearch.Elasticsearch(hosts=[{'host': elastic_conf.host, 'port': elastic_conf.port}])
+
+        # check whether we can actually connect to ElasticSearch
+        try:
+            if self.es.ping() is not True:
+                raise Exception("Cannot connect to ElasticSearch: %s:%s" % (elastic_conf.host, elastic_conf.port))
+        except:
+            raise Exception("Cannot connect to ElasticSearch: %s:%s" % (elastic_conf.host, elastic_conf.port))
 
 
 ################################

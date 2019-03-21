@@ -153,6 +153,15 @@ class AnnotationsIndexer:
         nlp_response = self.nlp_service.query(text=doc_text)
         assert 'result' in nlp_response
         assert 'annotations' in nlp_response['result']
+
+        if 'result' not in nlp_response:
+            self.log.error(" - no result payload returned from NLP service")
+            return
+
+        if 'annotations' not in nlp_response['result']:
+            self.log.error(" - no annotations available in the NLP result payload")
+            return
+
         # self.log.info("-- took: %.3f s" % (time.time() - begin_t))
 
         # begin_t = time.time()
