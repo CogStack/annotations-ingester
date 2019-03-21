@@ -1,9 +1,9 @@
-# Information
+# Introduction
 
 This simple application implements an ingestion process to: 
-- retrieve the documents from specified ElasticSearch source,
+- retrieve the documents from a specified ElasticSearch source,
 - send the selected content from these documents to NLP REST service receiving back the annotations from the text,
-- send the annotations to specified ElasticSearch sink.
+- send the annotations with selected metadata to specified ElasticSearch sink.
 
 The ingestion parameters (source, sink, fields mapping, etc.) can be set in `congif.yaml` file.
 
@@ -46,4 +46,4 @@ The sub-entry `sink` specifies additional options during sending the processed a
 
 # Missing
 - tests
-- proper handling ElasticSearch bulk requests
+- proper handling for ElasticSearch bulk requests
