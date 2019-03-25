@@ -1,17 +1,15 @@
 source:
   es:
-    host-name: localhost
-    host-port: 9200
+    hosts: ["http://localhost:9200", "http://localhost:9201", "http://localhost:9202"]
     index-name: 'sample_observations_view'
 
 sink:
   es:
-    host-name: localhost
-    host-port: 9200
+    hosts: ["http://localhost:9200", "http://localhost:9201", "http://localhost:9202"]
     index-name: 'new_atomic_annotations'
 
 nlp-service:
-  endpoint-url: 'http://localhost:8095/api/process'
+  endpoint-url: 'http://localhost:8096/api/process'
 
 mapping:
   source:

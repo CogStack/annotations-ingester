@@ -46,5 +46,4 @@ The sub-entry `sink` specifies additional options during sending the processed a
 
 # Missing
 - tests
-- multi-node support
 - multi-threaded processing

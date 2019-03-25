@@ -55,8 +55,7 @@ if __name__ == "__main__":
 
         # initialize the elastic source
         source_params = config.params['source']
-        es_source_conf = ElasticConnectorConfig(host=source_params['es']['host-name'],
-                                                port=source_params['es']['host-port'])
+        es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'])
         es_source_conn = ElasticConnector(es_source_conf)
 
         es_source = ElasticRangedIndexer(es_source_conn, source_params['es']['index-name'])
@@ -66,8 +65,7 @@ if __name__ == "__main__":
 
         # initialize the elastic sink
         sink_params = config.params['sink']
-        es_sink_conf = ElasticConnectorConfig(host=sink_params['es']['host-name'],
-                                              port=sink_params['es']['host-port'])
+        es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'])
         es_sink_conn = ElasticConnector(es_sink_conf)
         es_sink = ElasticIndexer(es_sink_conn, sink_params['es']['index-name'])
 
@@ -91,5 +89,5 @@ if __name__ == "__main__":
     logging.getLogger('elasticsearch').setLevel(level=logging.WARN)
     
     indexer.index_range(batch_date_start=mapping['source']['batch']['date-start'],
-                            batch_date_end=mapping['source']['batch']['date-end'])
+                        batch_date_end=mapping['source']['batch']['date-end'])
 

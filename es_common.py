@@ -12,19 +12,13 @@ import logging
 class ElasticConnectorConfig:
     """
     ElasticSearch connector configuration
-    At the moment supports only single-node clusters
+    All the hosts details are specified using RFC-1738
     """
-    def __init__(self, host, port, http_auth_user="", http_auth_pass=""):
+    def __init__(self, hosts):
         """
-        :param host: the ElasticSearch host name
-        :param port: the host's port
-        :param http_auth_user: the user name in case of required HTTP/HTTPS authentication
-        :param http_auth_pass: the user's password
+        :param hosts: the ElasticSearch hosts specified in RFC-1738 format
         """
-        self.host = host
-        self.port = port
-        self.http_user = http_auth_user
-        self.http_pass = http_auth_pass
+        self.hosts = hosts
 
 
 ################################
@@ -40,19 +34,13 @@ class ElasticConnector:
         """
         :param elastic_conf: ElasticSearch configuration :class:`~ElasticConnectorConfig`
         """
-        if len(elastic_conf.http_user) > 0:
-            http_auth = "{user}:{password}".format(user=elastic_conf.http_user, password=elastic_conf.http_pass)
-            self.es = elasticsearch.Elasticsearch(hosts=[{'host': elastic_conf.host, 'port': elastic_conf.port}],
-                                                  http_auth=http_auth)
-        else:
-            self.es = elasticsearch.Elasticsearch(hosts=[{'host': elastic_conf.host, 'port': elastic_conf.port}])
-
         # check whether we can actually connect to ElasticSearch
         try:
+            self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts)
             if self.es.ping() is not True:
-                raise Exception("Cannot connect to ElasticSearch: %s:%s" % (elastic_conf.host, elastic_conf.port))
+                raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
         except:
-            raise Exception("Cannot connect to ElasticSearch: %s:%s" % (elastic_conf.host, elastic_conf.port))
+            raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
 
 
 ################################
