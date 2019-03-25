@@ -46,4 +46,5 @@ The sub-entry `sink` specifies additional options during sending the processed a
 
 # Missing
 - tests
-- proper handling for ElasticSearch bulk requests
+- multi-node support
+- multi-threaded processing
