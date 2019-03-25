@@ -104,6 +104,7 @@ class ElasticIndexer:
         """
         Returns the valid index name taking into account suffix and naming restrictions
         :param suffix: an optional index suffix name
+        :param search_only: True if only using search
         :return: valid index name
         """
         if len(suffix) > 0:
@@ -246,7 +247,7 @@ class ElasticIndexer:
         ids_generator = elasticsearch.helpers.scan(self.conn.es,
                                                    query=query_body,
                                                    index=self.get_index_name(suffix=index_suffix,
-                                                                              search_only=True),
+                                                                             search_only=True),
                                                    doc_type=self.doc_type)
         ids = [hit['_id'] for hit in ids_generator]
         return ids
