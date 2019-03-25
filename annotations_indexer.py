@@ -22,7 +22,7 @@ class AnnotationsIndexer:
     MIN_TEXT_LEN = 10
 
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
-                 source_fields_to_persist, sink_indexer, split_index_by_field=""):
+                 source_fields_to_persist, sink_indexer, split_index_by_field="", use_bulk_indexing=True):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
         :param source_indexer: the source ElasticSearch indexer :class:`~ElasticIndexer`
@@ -43,6 +43,7 @@ class AnnotationsIndexer:
         self.sink_indexer = sink_indexer
 
         self.split_index_by_field = split_index_by_field
+        self.use_bulk_indexing = use_bulk_indexing
 
         self.log = logging.getLogger('AnnotationsIndexer')
 
@@ -91,14 +92,10 @@ class AnnotationsIndexer:
             else:
                 self.sink_indexer.index_doc(refined_ann)
 
-    def _index_annotations_bulk(self, nlp_response, document):
+    def _prepare_annotations(self, annotations, document):
         """
-        Indexes the annotations provided in the NLP Service response (bulk version)
-        TODO: needs refining
+        Returns a generator to create annotation documents -- used for ES bulk indexing
         """
-        annotations = nlp_response['annotations']
-
-        bulk_anns = {}
         for ann in annotations:
             # update annotation entry with fields from the document to persist and with prefix
             refined_ann = {}
@@ -112,19 +109,26 @@ class AnnotationsIndexer:
                 refined_field = "%s.%s" % (self.FIELD_ANN_PREFIX, field)
                 refined_ann[refined_field] = value
 
-            # index the refined annotation
-            key = ""
-            if len(self.split_index_by_field) > 0 and self.split_index_by_field in ann:
-                key = ann[self.split_index_by_field]
-                if key not in bulk_anns:
-                    bulk_anns[key] = []
+            if len(self.split_index_by_field) > 0:
+                index_suffix = ann[self.split_index_by_field]
+                index_name = self.sink_indexer.get_index_name(index_suffix)
+            else:
+                index_name = self.sink_indexer.get_index_name()
 
-            bulk_anns[key].append(refined_ann)
+            operation = {
+                '_op_type': 'index',
+                '_type': 'doc',
+                '_index': index_name,
+                '_source': refined_ann
+            }
+            yield operation
 
-        # bulk index per field type
-        # TODO: make this as one bulk request !
-        for suffix, anns in bulk_anns.items():
-            self.sink_indexer.index_docs_bulk(anns, suffix)
+    def _index_annotations_bulk(self, nlp_response, document):
+        """
+        Indexes the annotations provided in the NLP Service response (bulk version)
+        """
+        annotations = nlp_response['annotations']
+        self.sink_indexer.index_docs_bulk_gen(self._prepare_annotations(annotations, document))
 
     def _process_document(self, src_doc_id):
         """
@@ -163,10 +167,15 @@ class AnnotationsIndexer:
             return
 
         # self.log.info("-- took: %.3f s" % (time.time() - begin_t))
-
         # begin_t = time.time()
+
         self.log.info('- indexing annotations: %d' % len(nlp_response['result']['annotations']))
-        self._index_annotations(nlp_response['result'], doc)
+
+        if self.use_bulk_indexing:
+            self._index_annotations_bulk(nlp_response['result'], doc)
+        else:
+            self._index_annotations(nlp_response['result'], doc)
+
         # self.log.info("-- took: %.3f s" % (time.time() - begin_t))
 
     def index(self):

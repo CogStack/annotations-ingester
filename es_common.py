@@ -2,7 +2,7 @@
 
 import elasticsearch
 import elasticsearch.helpers
-import utils
+import logging
 
 
 ################################
@@ -63,6 +63,11 @@ class ElasticIndexer:
     """
     ElasticSearch indexer
     """
+
+    # the size of chunk when indexing documents in bulk
+    BULK_CHUNK_SIZE = 5000
+    BULK_REQUEST_TIMEOUT_S = 30
+
     def __init__(self, es_connector, index_name):
         """
         :param es_connector: ElasticSearch connector :class:`~ElasticConnector`
@@ -75,6 +80,8 @@ class ElasticIndexer:
         self.doc_type = 'doc'
 
         self.index_name_cache = {}
+
+        self.log = logging.getLogger('ElasticIndexer')
 
     def _format_index_name(self, index_name):
         """
@@ -93,7 +100,7 @@ class ElasticIndexer:
             .replace('<', '_').replace('>', '_').replace('|', '_')\
             .replace(' ', '_')
 
-    def _get_index_name(self, suffix="", search_only=False):
+    def get_index_name(self, suffix="", search_only=False):
         """
         Returns the valid index name taking into account suffix and naming restrictions
         :param suffix: an optional index suffix name
@@ -118,7 +125,7 @@ class ElasticIndexer:
         :param index_suffix: an optional suffix of the index to query
         :return: the number of records
         """
-        res = self.conn.es.count(self._get_index_name(suffix=index_suffix, search_only=True))
+        res = self.conn.es.count(self.get_index_name(suffix=index_suffix, search_only=True))
         return int(res['count'])
 
     def drop_index(self, index_suffix=""):
@@ -126,7 +133,7 @@ class ElasticIndexer:
         Drops the specified index
         :param index_suffix: optional suffix of the index to drop
         """
-        self.conn.es.indices.delete(index=self._get_index_name(index_suffix))
+        self.conn.es.indices.delete(index=self.get_index_name(index_suffix))
 
     def index_doc(self, doc, doc_id=None, index_suffix=""):
         """
@@ -135,7 +142,10 @@ class ElasticIndexer:
         :param doc_id: the id of the document
         :param index_suffix: optional suffix of the index to store the document
         """
-        self.conn.es.index(index=self._get_index_name(index_suffix), doc_type=self.doc_type, id=doc_id, body=doc)
+        try:
+            self.conn.es.index(index=self.get_index_name(index_suffix), doc_type=self.doc_type, id=doc_id, body=doc)
+        except Exception as e:
+            self.log.error("Exception caught while indexing document: " + str(e))
 
     def index_docs_bulk(self, docs, index_suffix=""):
         """
@@ -143,8 +153,31 @@ class ElasticIndexer:
         :param docs: the array of documents, each represented as KVPs
         :param index_suffix: an optional index suffix name
         """
-        index_name = self._get_index_name(index_suffix)
-        elasticsearch.helpers.bulk(self.conn.es, docs, index=index_name, doc_type=self.doc_type)
+        index_name = self.get_index_name(index_suffix)
+        try:
+            elasticsearch.helpers.bulk(self.conn.es, docs, index=index_name, doc_type=self.doc_type)
+        except Exception as e:
+            self.log.error("Exception caught while indexing documents in bulk: " + str(e))
+
+    def index_docs_bulk_gen(self, actions_generator):
+        """
+        Indexes the documents using ElasticSearch bulk API
+        :param actions_generator: the generator of documents, must include the index name
+        """
+        failed_docs = 0
+        try:
+            for status, result in elasticsearch.helpers.streaming_bulk(self.conn.es,
+                                                                       actions=actions_generator,
+                                                                       chunk_size=self.BULK_CHUNK_SIZE,
+                                                                       request_timeout=self.BULK_REQUEST_TIMEOUT_S):
+                if status is False:
+                    failed_docs += 1
+
+            if failed_docs:
+                self.log.warn("Failed indexing documents in bulk: %d " % failed_docs)
+
+        except Exception as e:
+            self.log.error("Exception caught while indexing documents in bulk: " + str(e))
 
     def get_doc(self, doc_id, index_suffix=""):
         """
@@ -153,7 +186,7 @@ class ElasticIndexer:
         :param index_suffix: optional suffix of the index to store the document
         :return: the document represented as KVPs dictionary
         """
-        res = self.conn.es.get(index=self._get_index_name(index_suffix), doc_type=self.doc_type, id=doc_id)
+        res = self.conn.es.get(index=self.get_index_name(index_suffix), doc_type=self.doc_type, id=doc_id)
         assert '_source' in res
         return res['_source']
 
@@ -170,7 +203,7 @@ class ElasticIndexer:
             "stored_fields": []
         }
 
-        meta = self.conn.es.search(index=self._get_index_name(suffix=index_suffix, search_only=True),
+        meta = self.conn.es.search(index=self.get_index_name(suffix=index_suffix, search_only=True),
                                    body=query_body)
         if 'hits' not in meta:
             return []
@@ -190,8 +223,11 @@ class ElasticIndexer:
                 "match": match_criteria
             }
         }
-        res = self.conn.es.count(index=self._get_index_name(suffix=index_suffix, search_only=True),
-                                 body=query_body)
+        index_name = self.get_index_name(suffix=index_suffix, search_only=True)
+        if not self.conn.es.indices.exists(index=index_name):
+            return False
+
+        res = self.conn.es.count(index=index_name, body=query_body)
         return int(res['count']) > 0
 
     def get_doc_ids_scan(self, index_suffix=""):
@@ -209,7 +245,7 @@ class ElasticIndexer:
 
         ids_generator = elasticsearch.helpers.scan(self.conn.es,
                                                    query=query_body,
-                                                   index=self._get_index_name(suffix=index_suffix,
+                                                   index=self.get_index_name(suffix=index_suffix,
                                                                               search_only=True),
                                                    doc_type=self.doc_type)
         ids = [hit['_id'] for hit in ids_generator]
@@ -249,7 +285,7 @@ class ElasticRangedIndexer(ElasticIndexer):
 
         ids_generator = elasticsearch.helpers.scan(self.conn.es,
                                                    query=query_body,
-                                                   index=self._get_index_name(index_suffix),
+                                                   index=self.get_index_name(index_suffix),
                                                    doc_type=self.doc_type)
         ids = [hit['_id'] for hit in ids_generator]
         return ids

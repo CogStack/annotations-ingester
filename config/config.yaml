@@ -11,7 +11,7 @@ sink:
     index-name: 'new_atomic_annotations'
 
 nlp-service:
-  endpoint-url: 'http://localhost:8091/api/process'
+  endpoint-url: 'http://localhost:8095/api/process'
 
 mapping:
   source:
