@@ -62,6 +62,8 @@ class AnnotationsIndexer:
         else:
             suffix = ""
 
+        # individual annotations will contain the original document id, hence the goal
+        # is to check the value of the source document embedded in the annotation
         field_name = "%s.%s" % (self.FIELD_META_PREFIX, self.source_docid_field)
         match_criteria = {field_name: doc[self.source_docid_field]}
 

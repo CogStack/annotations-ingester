@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-import requests
-import utils
+from ingester.utils import check_url_available
 
 
 ################################
@@ -17,7 +16,7 @@ class NlpService:
         :param url_endpoint: the full url endpoint to query
         """
         assert url_endpoint is not None and len(url_endpoint) > 0
-        if url_endpoint is None or len(url_endpoint) == 0 or not utils.check_url_available(url_endpoint):
+        if url_endpoint is None or len(url_endpoint) == 0 or not check_url_available(url_endpoint):
             raise Exception("Cannot connect to the provided REST service endpoint")
 
         self.url_endpoint = url_endpoint
@@ -61,6 +60,7 @@ class BioyodieService(NlpService):
         super().__init__(url_endpoint)
 
     def query(self, text, metadata={}, application_params={'annotationSets': "Bio:*"}):
+    #def query(self, text, metadata={}, application_params={}):
         """
         Sends the document to the NLP service to receive back the annotations
         :param text: the text to be processed

@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-from es_common import *
-from nlp_service import *
-from annotations_indexer import *
-
-import logging
 import argparse
 import yaml
+import logging
+
+from ingester.es_common import *
+from ingester.nlp_service import *
+from ingester.annotations_indexer import *
 
 
 class AppConfig:
