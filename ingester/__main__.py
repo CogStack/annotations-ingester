@@ -61,7 +61,7 @@ if __name__ == "__main__":
         es_source = ElasticRangedIndexer(es_source_conn, source_params['es']['index-name'])
 
         # initialize NLP service
-        nlp_service = BioyodieService(config.params['nlp-service']['endpoint-url'])
+        nlp_service = NlpService(config.params['nlp-service']['endpoint-url'])
 
         # initialize the elastic sink
         sink_params = config.params['sink']
