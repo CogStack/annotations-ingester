@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import requests
+
 from ingester.utils import check_url_available
 
 
