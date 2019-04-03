@@ -5,7 +5,7 @@ This simple application implements an ingestion process to:
 - send the selected content from these documents to NLP REST service receiving back the annotations from the text,
 - send the annotations with selected metadata to specified ElasticSearch sink.
 
-The ingestion parameters (source, sink, fields mapping, etc.) can be set in `congif.yml` file.
+The ingestion parameters (source, sink, fields mapping, etc.) can be set in `congif.yml` file (in `config` directory).
 
 
 # Usage
@@ -13,7 +13,7 @@ The ingestion parameters (source, sink, fields mapping, etc.) can be set in `con
 Firstly install the Python libraries specified in `requirements.txt`.
 
 To run:
-`python main.py --config config.yml`
+`python main.py --config config/config.yml`
 
 
 # Configuration
