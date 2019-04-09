@@ -140,12 +140,12 @@ class AnnotationsIndexer:
 
         # check whether there is document content to process
         if self.source_text_field not in doc or len(doc[self.source_text_field]) < self.MIN_TEXT_LEN:
-            self.log.info('- skipping: no content')
+            self.log.debug('- skipping: no content')
             return
 
         # check whether the document has been already processed
         if self._document_already_processed(doc):
-            self.log.info('- skipping: document already processed')
+            self.log.debug('- skipping: document already processed')
             return
 
         # get the text with metadata
@@ -155,7 +155,7 @@ class AnnotationsIndexer:
         # TODO: handle metadata and DCT
         # TODO: error handling
         # begin_t = time.time()
-        self.log.info('- querying the NLP service')
+        self.log.debug('- querying the NLP service')
         nlp_response = self.nlp_service.query(text=doc_text)
         assert 'result' in nlp_response
         assert 'annotations' in nlp_response['result']
