@@ -9,16 +9,32 @@ import logging
 #
 # connector config
 #
+class SslConnectionConfig:
+    """
+    SSL connection configuration for ElasticSearch
+    """
+    def __init__(self, ca_certs_path, client_cert_path, client_key_path):
+        """
+        :param ca_certs_path: path for CA cert file (PEM)
+        :param ca_certs_path: path for client cert file (PEM)
+        :param ca_certs_path: path for client key file (PEM)
+        """
+        self.ca_certs_path = ca_certs_path
+        self.client_cert_path = client_cert_path
+        self.client_key_path = client_key_path
+
+
 class ElasticConnectorConfig:
     """
     ElasticSearch connector configuration
     All the hosts details are specified using RFC-1738
     """
-    def __init__(self, hosts):
+    def __init__(self, hosts, ssl_config=None):
         """
         :param hosts: the ElasticSearch hosts specified in RFC-1738 format
         """
         self.hosts = hosts
+        self.ssl_config = ssl_config
 
 
 ################################
@@ -36,9 +52,17 @@ class ElasticConnector:
         """
         # check whether we can actually connect to ElasticSearch
         try:
-            self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts)
-            if self.es.ping() is not True:
-                raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
+            if elastic_conf.ssl_config is not None:
+                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts,
+                                                      use_ssl=True,
+                                                      verify_certs=True,
+                                                      ca_certs=elastic_conf.ssl_config.ca_certs_path,
+                                                      client_cert=elastic_conf.ssl_config.client_cert_path,
+                                                      client_key=elastic_conf.ssl_config.client_key_path)
+            else:
+                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts)
+                if self.es.ping() is not True:
+                    raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
         except:
             raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
 

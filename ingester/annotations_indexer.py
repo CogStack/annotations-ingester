@@ -139,7 +139,9 @@ class AnnotationsIndexer:
         doc = self.source_indexer.get_doc(src_doc_id)
 
         # check whether there is document content to process
-        if self.source_text_field not in doc or len(doc[self.source_text_field]) < self.MIN_TEXT_LEN:
+        if self.source_text_field not in doc or \
+                doc[self.source_text_field] is None or \
+                len(doc[self.source_text_field]) < self.MIN_TEXT_LEN:
             self.log.debug('- skipping: no content')
             return
 
@@ -164,7 +166,7 @@ class AnnotationsIndexer:
             self.log.error(" - no result payload returned from NLP service")
             return
 
-        if 'annotations' not in nlp_response['result']:
+        if 'annotations' not in nlp_response['result'] or nlp_response['result']['annotations'] is None:
             self.log.error(" - no annotations available in the NLP result payload")
             return
 
