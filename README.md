@@ -21,11 +21,19 @@ The ingestion process properties are configured in `config.yml`.
 
 ## Available options:
 
-### Data Source
+### ElasticSearch data store
+
+#### Data Source
 Entries under `source` key specify the ElasticSearch source.
 
-### Data sink
+#### Data sink
 Entries under `sink` key specify the ElasticSearch sink.
+
+#### Security and SSL certificates
+This only applies when ElasticSearch cluster is using X-Pack / Open Distro and requires secure connections with using SSL certificates. Under the key `source` and/or `sink` can be optionally specified `security` entry that will contain necessary configuration -- these are:
+- `ca-certs-path` -- the path to CA certificates file (PEM),
+- `client-cert-path` -- the path to client certificate file (PEM),
+- `client-key-path` -- the path to client key (PEM).
 
 ### Fields mapping
 Entries under `mapping` key define the mapping of the document fields for the ingestion.
