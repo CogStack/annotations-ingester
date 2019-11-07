@@ -35,3 +35,6 @@ mapping:
       date-end: '2018-06-01'
   sink:
     split-index-by-field: 'type'
+  nlp:
+    skip-processed-doc-check: 'true'
+    annotation-id-field: 'id'

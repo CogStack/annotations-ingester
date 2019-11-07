@@ -95,7 +95,9 @@ if __name__ == "__main__":
                                           split_index_by_field=mapping['sink']['split-index-by-field'],
                                           sink_indexer=es_sink,
                                           source_batch_date_field=mapping['source']['batch']['date-field'],
-                                          batch_date_format=mapping['source']['batch']['date-format'])
+                                          batch_date_format=mapping['source']['batch']['date-format'],
+                                          skip_doc_check=mapping['nlp']['skip-processed-doc-check'].lower() == "true",
+                                          nlp_ann_id_field=mapping['nlp']['annotation-id-field'])
     except Exception as e:
         log = logging.getLogger('main')
         log.error("Cannot initialize the application: " + str(e))

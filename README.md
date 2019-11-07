@@ -51,6 +51,9 @@ The sub-entry `batch` defines the possible portion of documents to be processed 
 The sub-entry `sink` specifies additional options during sending the processed annotations:
 - `split-index-by-field` - the name of the field in the returned annotations the value of which will be used as a prefix for the index name (e.g., used to send annotations of different types to separate indices).
 
+The sub-entry `nlp` specifies additional options during processing the documents with NLP:
+- `skip-processed-doc-check` - whether to skip checking for already processed documents in ElasticSearch,
+-  `annotation-id-field` - the name of field containing the annotation id returned from the NLP app.
 
 # Missing
 - tests

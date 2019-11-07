@@ -22,7 +22,8 @@ class AnnotationsIndexer:
     MIN_TEXT_LEN = 10
 
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
-                 source_fields_to_persist, sink_indexer, split_index_by_field="", use_bulk_indexing=True):
+                 source_fields_to_persist, sink_indexer, split_index_by_field="", use_bulk_indexing=True,
+                 skip_doc_check=False, nlp_ann_id_field='id'):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
         :param source_indexer: the source ElasticSearch indexer :class:`~ElasticIndexer`
@@ -30,6 +31,8 @@ class AnnotationsIndexer:
         :param source_fields_to_persist: the fields in source documents to persis in annotations
         :param sink_indexer: the sink ElasticSearch indexer :class:`~ElasticIndexer`
         :param split_index_by_field: optional, the name of the field by which the sink index should be split
+        :param skip_doc_check: optional, whether to skip checking for already ingested documents
+        :param nlp_ann_id_field: optional, the name of the annotation id field
         """
         self.nlp_service = nlp_service
         self.source_indexer = source_indexer
@@ -44,6 +47,9 @@ class AnnotationsIndexer:
 
         self.split_index_by_field = split_index_by_field
         self.use_bulk_indexing = use_bulk_indexing
+
+        self.skip_doc_check = skip_doc_check
+        self.nlp_ann_id_field = nlp_ann_id_field
 
         self.log = logging.getLogger('AnnotationsIndexer')
 
@@ -117,6 +123,9 @@ class AnnotationsIndexer:
             else:
                 index_name = self.sink_indexer.get_index_name()
 
+            # set a fixed document id name
+            refined_ann['_id'] = "_doc-%s-ann-%s" % (ann[self.source_docid_field], ann[self.nlp_ann_id_field])
+
             operation = {
                 '_op_type': 'index',
                 '_type': 'doc',
@@ -146,7 +155,7 @@ class AnnotationsIndexer:
             return
 
         # check whether the document has been already processed
-        if self._document_already_processed(doc):
+        if self.skip_doc_check and self._document_already_processed(doc):
             self.log.debug('- skipping: document already processed')
             return
 
@@ -209,7 +218,8 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
 
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
                  source_fields_to_persist, sink_indexer,
-                 source_batch_date_field, batch_date_format="yyyy-MM-dd", split_index_by_field=""):
+                 source_batch_date_field, batch_date_format="yyyy-MM-dd", split_index_by_field="",
+                 skip_doc_check=False, nlp_ann_id_field='id'):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
         :param source_indexer: the source ElasticSearch indexer :class:`~ElasticIndexer`
@@ -219,9 +229,12 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         :param source_batch_date_field: the field in source documents containing the date field to select documents
         :param batch_date_format: the format of the batch dates specified
         :param split_index_by_field: optional, the name of the field by which the sink index should be split
+        :param skip_doc_check: optional, whether to skip checking for already ingested documents
+        :param nlp_ann_id_field: optional, the name of the annotation id field
         """
         super().__init__(nlp_service, source_indexer, source_text_field, source_docid_field,
-                         source_fields_to_persist, sink_indexer, split_index_by_field)
+                         source_fields_to_persist, sink_indexer, split_index_by_field, True,
+                         skip_doc_check, nlp_ann_id_field)
 
         self.source_batch_date_field = source_batch_date_field
         self.batch_date_format = batch_date_format
