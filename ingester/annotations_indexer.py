@@ -124,7 +124,7 @@ class AnnotationsIndexer:
                 index_name = self.sink_indexer.get_index_name()
 
             operation = {
-                '_id': "doc-%s-ann-%s" % (ann[self.source_docid_field], ann[self.nlp_ann_id_field]),
+                '_id': "doc-%s-ann-%s" % (document[self.source_docid_field], ann[self.nlp_ann_id_field]),
                 '_op_type': 'index',
                 '_type': 'doc',
                 '_index': index_name,
