@@ -45,8 +45,9 @@ The sub-entry `source` defines the field names that contain:
 
 The sub-entry `batch` defines the possible portion of documents to be processed according to the date. The used fields are:
 - `date-field` - the name of the field containing the date,
-- `date-format` - the format of the date/time used to specify the time window by the user (below)
-- `date-start` and `date-end` - the time window to be processed.
+- `date-format` - the format of the date/time used to specify the time window by the user (below),
+- `date-start` and `date-end` - the time window to be processed,
+- `threads` - the number of processing threads to speed up the ingestion.
 
 The sub-entry `sink` specifies additional options during sending the processed annotations:
 - `split-index-by-field` - the name of the field in the returned annotations the value of which will be used as a prefix for the index name (e.g., used to send annotations of different types to separate indices).
@@ -58,4 +59,3 @@ The sub-entry `nlp` specifies additional options during processing the documents
 # Missing
 - tests
 - API specs
-- multi-threaded processing
