@@ -85,6 +85,7 @@ if __name__ == "__main__":
         es_sink_conn = ElasticConnector(es_sink_conf)
         es_sink = ElasticIndexer(es_sink_conn, sink_params['es']['index-name'])
 
+
         # initialize the indexer
         mapping = config.params['mapping']
         indexer = BatchAnnotationsIndexer(nlp_service=nlp_service,
@@ -97,7 +98,8 @@ if __name__ == "__main__":
                                           source_batch_date_field=mapping['source']['batch']['date-field'],
                                           batch_date_format=mapping['source']['batch']['date-format'],
                                           skip_doc_check=mapping['nlp']['skip-processed-doc-check'].lower() == "true",
-                                          nlp_ann_id_field=mapping['nlp']['annotation-id-field'])
+                                          nlp_ann_id_field=mapping['nlp']['annotation-id-field'],
+                                          threads=mapping['source']['batch']['threads'])
     except Exception as e:
         log = logging.getLogger('main')
         log.error("Cannot initialize the application: " + str(e))

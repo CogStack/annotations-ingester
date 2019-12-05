@@ -2,6 +2,7 @@
 
 import logging
 # import time
+from concurrent.futures import ThreadPoolExecutor
 
 
 ################################
@@ -22,7 +23,7 @@ class AnnotationsIndexer:
     MIN_TEXT_LEN = 10
 
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
-                 source_fields_to_persist, sink_indexer, split_index_by_field="", use_bulk_indexing=True,
+                 source_fields_to_persist, sink_indexer, split_index_by_field="", threads=1, use_bulk_indexing=True,
                  skip_doc_check=False, nlp_ann_id_field='id'):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
@@ -47,6 +48,7 @@ class AnnotationsIndexer:
 
         self.split_index_by_field = split_index_by_field
         self.use_bulk_indexing = use_bulk_indexing
+        self.threads = threads
 
         self.skip_doc_check = skip_doc_check
         self.nlp_ann_id_field = nlp_ann_id_field
@@ -143,6 +145,7 @@ class AnnotationsIndexer:
         """
         Performs full document processing cycle for the specified document id
         """
+        self.log.info('Processing document with id: ' + src_doc_id)
         doc = self.source_indexer.get_doc(src_doc_id)
 
         # check whether there is document content to process
@@ -199,9 +202,8 @@ class AnnotationsIndexer:
         doc_ids = self._get_doc_ids()
 
         self.log.info('Found documents: %d' % len(doc_ids))
-        for doc_id in doc_ids:
-            self.log.info('Processing document with id: ' + doc_id)
-            self._process_document(doc_id)
+        with ThreadPoolExecutor(max_workers=self.threads) as executor:
+            executor.map(self._process_document, doc_ids)
 
 
 ################################
@@ -216,7 +218,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
 
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
                  source_fields_to_persist, sink_indexer,
-                 source_batch_date_field, batch_date_format="yyyy-MM-dd", split_index_by_field="",
+                 source_batch_date_field, batch_date_format="yyyy-MM-dd", split_index_by_field="", threads=1,
                  skip_doc_check=False, nlp_ann_id_field='id'):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
@@ -231,7 +233,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         :param nlp_ann_id_field: optional, the name of the annotation id field
         """
         super().__init__(nlp_service, source_indexer, source_text_field, source_docid_field,
-                         source_fields_to_persist, sink_indexer, split_index_by_field, True,
+                         source_fields_to_persist, sink_indexer, split_index_by_field, threads, True,
                          skip_doc_check, nlp_ann_id_field)
 
         self.source_batch_date_field = source_batch_date_field
@@ -256,6 +258,5 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
 
         self.log.info('Found documents: %d' % len(doc_ids))
-        for doc_id in doc_ids:
-            self.log.info('Processing document with id: ' + doc_id)
-            self._process_document(doc_id)
+        with ThreadPoolExecutor(max_workers=self.threads) as executor:
+            executor.map(self._process_document, doc_ids)
