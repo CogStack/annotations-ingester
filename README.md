@@ -21,11 +21,19 @@ The ingestion process properties are configured in `config.yml`.
 
 ## Available options:
 
-### Data Source
+### ElasticSearch data store
+
+#### Data Source
 Entries under `source` key specify the ElasticSearch source.
 
-### Data sink
+#### Data sink
 Entries under `sink` key specify the ElasticSearch sink.
+
+#### Security and SSL certificates
+This only applies when ElasticSearch cluster is using X-Pack / Open Distro and requires secure connections with using SSL certificates. Under the key `source` and/or `sink` can be optionally specified `security` entry that will contain necessary configuration -- these are:
+- `ca-certs-path` -- the path to CA certificates file (PEM),
+- `client-cert-path` -- the path to client certificate file (PEM),
+- `client-key-path` -- the path to client key (PEM).
 
 ### Fields mapping
 Entries under `mapping` key define the mapping of the document fields for the ingestion.
@@ -43,6 +51,9 @@ The sub-entry `batch` defines the possible portion of documents to be processed 
 The sub-entry `sink` specifies additional options during sending the processed annotations:
 - `split-index-by-field` - the name of the field in the returned annotations the value of which will be used as a prefix for the index name (e.g., used to send annotations of different types to separate indices).
 
+The sub-entry `nlp` specifies additional options during processing the documents with NLP:
+- `skip-processed-doc-check` - whether to skip checking for already processed documents in ElasticSearch,
+-  `annotation-id-field` - the name of field containing the annotation id returned from the NLP app.
 
 # Missing
 - tests
