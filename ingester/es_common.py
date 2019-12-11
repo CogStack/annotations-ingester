@@ -58,9 +58,10 @@ class ElasticConnector:
                                                       verify_certs=True,
                                                       ca_certs=elastic_conf.ssl_config.ca_certs_path,
                                                       client_cert=elastic_conf.ssl_config.client_cert_path,
-                                                      client_key=elastic_conf.ssl_config.client_key_path)
+                                                      client_key=elastic_conf.ssl_config.client_key_path,
+                                                      retry_on_timeout=True)
             else:
-                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts)
+                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, retry_on_timeout=True)
                 if self.es.ping() is not True:
                     raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
         except:
