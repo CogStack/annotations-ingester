@@ -275,7 +275,7 @@ class ElasticIndexer:
         s = s.extra(slice={"id": slice_no, "max": SLICES})
         doc_ids = set()
         for d in s.scan():
-            doc_ids.add(d.field_name)
+            doc_ids.add(d[field_name])
         return doc_ids
 
 ################################
