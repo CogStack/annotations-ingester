@@ -258,7 +258,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         # doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
         doc_ids = set()
         args_list = []
-        SLICES = min(10, self.threads * 20)
+        SLICES = min(3, self.threads * 20)
         for i in range(SLICES):
             args_list.append([i, SLICES, self.source_docid_field])
         with ThreadPoolExecutor(max_workers=SLICES) as exec:
