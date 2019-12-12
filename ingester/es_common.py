@@ -271,7 +271,7 @@ class ElasticIndexer:
         Retrieves all doc ids in parallel.
         """
         slice_no, SLICES, field_name = args
-        s = Search(using=self.conn.es, index=self.index_name, doc_type=self.doc_type)
+        s = Search(using=self.conn.es, index=self.index_name, doc_type=self.doc_type).params(request_timeout=9999999)
         s = s.extra(slice={"id": slice_no, "max": SLICES})
         doc_ids = set()
         for d in s.scan():
