@@ -255,7 +255,27 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         :param batch_date_end: the end date of the documents batch
         """
         self.log.info('Fetching document ids that match the criteria...')
-        doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
+        # doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
+        doc_ids = set()
+        args_list = []
+        for i in range(self.threads):
+            args_list.append([i, self.threads, self.source_docid_field])
+        with ThreadPoolExecutor(max_workers=self.threads) as exec:
+            for result in exec.map(self.source_indexer.get_unique_field_values_slice, args_list):
+                doc_ids.update(result)
+        self.log.info('Number of documents to annotate', len(doc_ids))
+
+        processed_ids = set()
+        field_name = "%s.%s" % (self.FIELD_META_PREFIX, self.source_docid_field)
+        args_list = []
+        for i in range(self.threads):
+            args_list.append([i, self.threads, field_name])
+        with ThreadPoolExecutor(max_workers=self.threads) as exec:
+            for result in exec.map(self.sink_indexer.get_unique_field_values_slice, args_list):
+                processed_ids.update(result)
+        self.log.info('Number of documents being annotated', len(processed_ids))
+
+        doc_ids = list(doc_ids - processed_ids)
 
         self.log.info('Found documents: %d' % len(doc_ids))
         with ThreadPoolExecutor(max_workers=self.threads) as executor:

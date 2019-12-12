@@ -3,6 +3,7 @@
 import elasticsearch
 import elasticsearch.helpers
 import logging
+from elasticsearch_dsl import Search
 
 
 ################################
@@ -265,6 +266,17 @@ class ElasticIndexer:
         ids = [hit['_id'] for hit in ids_generator]
         return ids
 
+    def get_unique_field_values_slice(self, args):
+        """
+        Retrieves all doc ids in parallel.
+        """
+        slice_no, SLICES, field_name = args
+        s = Search(using=self.conn.es, index=self.index_name, doc_type=self.doc_type)
+        s = s.extra(slice={"id": slice_no, "max": SLICES})
+        doc_ids = set()
+        for d in s.scan():
+            doc_ids.add(d.field_name)
+        return doc_ids
 
 ################################
 #
