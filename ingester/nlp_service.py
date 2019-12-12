@@ -2,8 +2,8 @@
 
 import requests
 
-from ingester.utils import check_url_available
-
+# from ingester.utils import check_url_available
+from utils import check_url_available
 
 ################################
 #
