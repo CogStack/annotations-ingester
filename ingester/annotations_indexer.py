@@ -262,26 +262,27 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
 
         doc_ids = set()
         args_list = []
-        SLICES = min(3, self.threads * 20)
+        SLICES = min(5, self.threads * 20)
         for i in range(SLICES):
             args_list.append([i, SLICES, self.source_docid_field])
         with ThreadPoolExecutor(max_workers=SLICES) as exec:
             for result in exec.map(self.source_indexer.get_unique_field_values_slice, args_list):
                 doc_ids.update(result)
-        self.log.info('******************SECOND: Number of documents to annotate', len(doc_ids))
+        print('Number of documents to annotate', len(doc_ids))
 
         processed_ids = set()
-        field_name = "%s.%s" % (self.FIELD_META_PREFIX, self.source_docid_field)
-        args_list = []
-        for i in range(SLICES):
-            args_list.append([i, SLICES, field_name])
-        with ThreadPoolExecutor(max_workers=SLICES) as exec:
-            for result in exec.map(self.sink_indexer.get_unique_field_values_slice, args_list):
-                processed_ids.update(result)
-        self.log.info('Number of documents being annotated', len(processed_ids))
+        if self.sink_indexer.index_exist():
+            field_name = "%s.%s" % (self.FIELD_META_PREFIX, self.source_docid_field)
+            args_list = []
+            for i in range(SLICES):
+                args_list.append([i, SLICES, field_name])
+            with ThreadPoolExecutor(max_workers=SLICES) as exec:
+                for result in exec.map(self.sink_indexer.get_unique_field_values_slice, args_list):
+                    processed_ids.update(result)
+            print('Number of annotated documents', len(processed_ids))
 
         doc_ids = list(doc_ids - processed_ids)
 
-        self.log.info('Found documents: %d' % len(doc_ids))
+        print('Found documents to annotate: %d' % len(doc_ids))
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
             executor.map(self._process_document, doc_ids)

@@ -280,6 +280,9 @@ class ElasticIndexer:
             doc_ids.add(d[field_name])
         return doc_ids
 
+    def index_exist(self):
+        return self.conn.es.indices.exists(index=self.index_name)
+
 ################################
 #
 # ranged indexer
