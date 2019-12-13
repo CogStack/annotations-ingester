@@ -99,7 +99,9 @@ if __name__ == "__main__":
                                           batch_date_format=mapping['source']['batch']['date-format'],
                                           skip_doc_check=mapping['nlp']['skip-processed-doc-check'].lower() == "true",
                                           nlp_ann_id_field=mapping['nlp']['annotation-id-field'],
-                                          threads=mapping['source']['batch']['threads'])
+                                          threads=mapping['source']['batch']['threads'],
+                                          python_date_format=mapping['source']['batch']['python-date-format'],
+                                          interval=mapping['source']['batch']['interval'])
     except Exception as e:
         log = logging.getLogger('main')
         log.error("Cannot initialize the application: " + str(e))

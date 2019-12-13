@@ -3,6 +3,9 @@
 import logging
 # import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from datetime import timedelta
+
 
 
 ################################
@@ -24,7 +27,7 @@ class AnnotationsIndexer:
 
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
                  source_fields_to_persist, sink_indexer, split_index_by_field="", threads=1, use_bulk_indexing=True,
-                 skip_doc_check=False, nlp_ann_id_field='id'):
+                 skip_doc_check=False, nlp_ann_id_field='id', python_date_format='%Y-%m-%d', interval=30):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
         :param source_indexer: the source ElasticSearch indexer :class:`~ElasticIndexer`
@@ -34,6 +37,8 @@ class AnnotationsIndexer:
         :param split_index_by_field: optional, the name of the field by which the sink index should be split
         :param skip_doc_check: optional, whether to skip checking for already ingested documents
         :param nlp_ann_id_field: optional, the name of the annotation id field
+        :param python_date_format: optional, the format of the date/time used by Python to specify the time window by the user
+        :param interval: optional, the number of days to be used for incremental batch processing
         """
         self.nlp_service = nlp_service
         self.source_indexer = source_indexer
@@ -49,6 +54,8 @@ class AnnotationsIndexer:
         self.split_index_by_field = split_index_by_field
         self.use_bulk_indexing = use_bulk_indexing
         self.threads = threads
+        self.python_date_format = python_date_format
+        self.interval = interval
 
         self.skip_doc_check = skip_doc_check
         self.nlp_ann_id_field = nlp_ann_id_field
@@ -219,7 +226,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
                  source_fields_to_persist, sink_indexer,
                  source_batch_date_field, batch_date_format="yyyy-MM-dd", split_index_by_field="", threads=1,
-                 skip_doc_check=False, nlp_ann_id_field='id'):
+                 skip_doc_check=False, nlp_ann_id_field='id', python_date_format='%Y-%m-%d', interval=30):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
         :param source_indexer: the source ElasticSearch indexer :class:`~ElasticIndexer`
@@ -254,9 +261,32 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         :param batch_date_start: the start date of the documents batch
         :param batch_date_end: the end date of the documents batch
         """
-        self.log.info('Fetching document ids that match the criteria...')
-        doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
 
-        self.log.info('Found documents: %d' % len(doc_ids))
-        with ThreadPoolExecutor(max_workers=self.threads) as executor:
-            executor.map(self._process_document, doc_ids)
+        continue_read = True
+
+        seg_batch_date_start = batch_date_start
+        seg_batch_date_end = batch_date_start
+
+        while continue_read:
+            seg_batch_date_start = seg_batch_date_end
+            dt_seg_batch_date_end = datetime.strptime(seg_batch_date_start, self.python_date_format) + timedelta(days=self.interval)
+       
+            seg_batch_date_end = dt_seg_batch_date_end.strftime(self.python_date_format)
+
+            if dt_seg_batch_date_end >= datetime.strptime(batch_date_end, self.python_date_format):
+                seg_batch_date_end = batch_date_end
+                continue_read = False
+
+            self.log.info('Fetching document ids that match the criteria... ' + batch_date_start + ' - ' + batch_date_end)
+            doc_ids = self._get_doc_ids_range(seg_batch_date_start, seg_batch_date_end)
+          
+            self.log.info('Found documents: %d' % len(doc_ids))
+            with ThreadPoolExecutor(max_workers=self.threads) as executor:
+                executor.map(self._process_document, doc_ids)
+            
+        # self.log.info('Fetching document ids that match the criteria...')
+        # doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
+
+        # self.log.info('Found documents: %d' % len(doc_ids))
+        # with ThreadPoolExecutor(max_workers=self.threads) as executor:
+        #    executor.map(self._process_document, doc_ids)

@@ -45,7 +45,9 @@ The sub-entry `source` defines the field names that contain:
 
 The sub-entry `batch` defines the possible portion of documents to be processed according to the date. The used fields are:
 - `date-field` - the name of the field containing the date,
-- `date-format` - the format of the date/time used to specify the time window by the user (below),
+- `date-format` - the format of the date/time used by ElasticSearch to specify the time window by the user (below),
+- `python-date-format` - the format of the date/time used by Python to specify the time window by the user (below),
+- `interval` - the number of days to be used for incremental batch processing in processing time window,
 - `date-start` and `date-end` - the time window to be processed,
 - `threads` - the number of processing threads to speed up the ingestion.
 
