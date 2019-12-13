@@ -277,7 +277,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                 seg_batch_date_end = batch_date_end
                 continue_read = False
 
-            self.log.info('Fetching document ids that match the criteria... ' + batch_date_start + ' - ' + batch_date_end)
+            self.log.info('Fetching document ids that match the criteria... ' +seg_batch_date_start + ' - ' + seg_batch_date_end)
             doc_ids = self._get_doc_ids_range(seg_batch_date_start, seg_batch_date_end)
           
             self.log.info('Found documents: %d' % len(doc_ids))
