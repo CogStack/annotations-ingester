@@ -268,6 +268,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         with ThreadPoolExecutor(max_workers=SLICES) as exec:
             for result in exec.map(self.source_indexer.get_unique_field_values_slice, args_list):
                 doc_ids.update(result)
+        self.log.info('Number of documents to annotate')
         print('Number of documents to annotate', len(doc_ids))
 
         processed_ids = set()
@@ -279,10 +280,14 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
             with ThreadPoolExecutor(max_workers=SLICES) as exec:
                 for result in exec.map(self.sink_indexer.get_unique_field_values_slice, args_list):
                     processed_ids.update(result)
+            self.log.info('Number of annotated documents')
             print('Number of annotated documents', len(processed_ids))
+        else:
+            self.log.info('No sink index found')
 
         doc_ids = list(doc_ids - processed_ids)
 
+        self.log.info('Found documents to annotate')
         print('Found documents to annotate: %d' % len(doc_ids))
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
             executor.map(self._process_document, doc_ids)
