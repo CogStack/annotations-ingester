@@ -273,7 +273,7 @@ class ElasticIndexer:
         """
         slice_no, SLICES, field_name = args
         s = Search(using=self.conn.es, index=self.index_name, doc_type=self.doc_type).params(request_timeout=9999999)
-        s = s.fields([field_name])  # only get ids, otherwise `fields` takes a list of field names
+        # s = s.fields([field_name])  # only get ids, otherwise `fields` takes a list of field names
         s = s.extra(slice={"id": slice_no, "max": SLICES})
         doc_ids = set()
         for d in s.scan():
