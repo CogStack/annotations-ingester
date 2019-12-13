@@ -37,6 +37,8 @@ class AnnotationsIndexer:
         :param split_index_by_field: optional, the name of the field by which the sink index should be split
         :param skip_doc_check: optional, whether to skip checking for already ingested documents
         :param nlp_ann_id_field: optional, the name of the annotation id field
+        :param python_date_format: optional, the format of the date/time used by Python to specify the time window by the user
+        :param interval: optional, the number of days to be used for incremental batch processing
         """
         self.nlp_service = nlp_service
         self.source_indexer = source_indexer
