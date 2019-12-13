@@ -27,7 +27,7 @@ class AnnotationsIndexer:
 
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
                  source_fields_to_persist, sink_indexer, split_index_by_field="", threads=1, use_bulk_indexing=True,
-                 skip_doc_check=False, nlp_ann_id_field='id', python_date_format='%Y-%M-%D', interval=30):
+                 skip_doc_check=False, nlp_ann_id_field='id', python_date_format='%Y-%m-%d', interval=30):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
         :param source_indexer: the source ElasticSearch indexer :class:`~ElasticIndexer`
@@ -224,7 +224,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
     def __init__(self, nlp_service, source_indexer, source_text_field, source_docid_field,
                  source_fields_to_persist, sink_indexer,
                  source_batch_date_field, batch_date_format="yyyy-MM-dd", split_index_by_field="", threads=1,
-                 skip_doc_check=False, nlp_ann_id_field='id', python_date_format='%Y-%M-%D', interval=30):
+                 skip_doc_check=False, nlp_ann_id_field='id', python_date_format='%Y-%m-%d', interval=30):
         """
         :param nlp_service: the NLP service to use :class:~`NlpService`
         :param source_indexer: the source ElasticSearch indexer :class:`~ElasticIndexer`
