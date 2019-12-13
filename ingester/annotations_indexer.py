@@ -256,9 +256,9 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         """
         self.log.info('Fetching document ids that match the criteria...')
 
-        doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
+        # doc_ids = self._get_doc_ids_range(batch_date_start, batch_date_end)
 
-        self.log.info('******************FIRST: Number of documents to annotate', len(doc_ids))
+        # self.log.info('******************FIRST: Number of documents to annotate', len(doc_ids))
 
         doc_ids = set()
         args_list = []
