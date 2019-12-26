@@ -241,7 +241,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         """
         super().__init__(nlp_service, source_indexer, source_text_field, source_docid_field,
                          source_fields_to_persist, sink_indexer, split_index_by_field, threads, True,
-                         skip_doc_check, nlp_ann_id_field)
+                         skip_doc_check, nlp_ann_id_field, python_date_format, interval)
 
         self.source_batch_date_field = source_batch_date_field
         self.batch_date_format = batch_date_format
