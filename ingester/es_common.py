@@ -29,12 +29,13 @@ class ElasticConnectorConfig:
     ElasticSearch connector configuration
     All the hosts details are specified using RFC-1738
     """
-    def __init__(self, hosts, ssl_config=None):
+    def __init__(self, hosts, extra_params=None, ssl_config=None):
         """
         :param hosts: the ElasticSearch hosts specified in RFC-1738 format
         """
         self.hosts = hosts
         self.ssl_config = ssl_config
+        self.extra_params= extra_params
 
 
 ################################
@@ -54,12 +55,12 @@ class ElasticConnector:
         try:
             if elastic_conf.ssl_config is not None:
                 self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts,
-                                                      use_ssl=True,
-                                                      verify_certs=True,
                                                       ca_certs=elastic_conf.ssl_config.ca_certs_path,
                                                       client_cert=elastic_conf.ssl_config.client_cert_path,
                                                       client_key=elastic_conf.ssl_config.client_key_path,
                                                       retry_on_timeout=True)
+            elif elastic_conf.extra_params is not None:
+                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, verify_certs=elastic_conf.extra_params['verify_certs'], use_ssl=elastic_conf.extra_params['use_ssl'], retry_on_timeout=True)
             else:
                 self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, retry_on_timeout=True)
                 if self.es.ping() is not True:
@@ -121,7 +122,7 @@ class ElasticIndexer:
         :return: valid index name
         """
         if len(suffix) > 0:
-            if search_only and suffix is "*":
+            if search_only and suffix == "*":
                 return "%s-*" % self.index_name
 
             index_name = "%s-%s" % (self.index_name, suffix)

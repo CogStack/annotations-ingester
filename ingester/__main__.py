@@ -78,8 +78,12 @@ if __name__ == "__main__":
             sink_ssl_config = SslConnectionConfig(ca_certs_path=sink_sec['ca-certs-path'],
                                                   client_cert_path=sink_sec['client-cert-path'],
                                                   client_key_path=sink_sec['client-key-path'])
+
             es_sink_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'],
                                                   ssl_config=sink_ssl_config)
+        elif 'extra_params' in sink_params['es']:
+            e_params = sink_params['es']['extra_params']
+            es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'], extra_params=e_params)
         else:
             es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'])
         es_sink_conn = ElasticConnector(es_sink_conf)
