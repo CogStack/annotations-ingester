@@ -35,6 +35,11 @@ This only applies when ElasticSearch cluster is using X-Pack / Open Distro and r
 - `client-cert-path` -- the path to client certificate file (PEM),
 - `client-key-path` -- the path to client key (PEM).
 
+### Extra ES connection options
+Entires under the key `extra_params` are optional, useful for test cases or deployments where we only use internal resources:
+- `use_ssl` -- use ssl connection
+- `verify_certs` -- verify SSL certificates 
+
 ### Fields mapping
 Entries under `mapping` key define the mapping of the document fields for the ingestion.
 
