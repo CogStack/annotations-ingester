@@ -1,10 +1,10 @@
 source:
   es:
-    hosts: ["https://cogstack:cogstack@localhost:9200"]
-    index-name: 'cogstack_observations_view'
-    extra_params:
-      use_ssl: False
-      verify_certs: False
+    hosts: ["http://elastic:admin@localhost:9200"]
+    index-name: 'sample_observations_view'
+    extra-params:
+      use-ssl: False
+      verify-certs: False
     security:
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
@@ -12,38 +12,44 @@ source:
 
 sink:
   es:
-    hosts: ["http://cogstack:cogstack@localhost:9200"]
+    hosts: ["http://elastic:admin@localhost:9200"]
     index-name: 'cogstack_atomic_annotations'
-    extra_params:
-      use_ssl: False
-      verify_certs: False
+    extra-params:
+      use-ssl: False
+      verify-certs: False
     security:
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: 'http://localhost:8095/api/process'
+  endpoint-url: 'http://localhost:5555/api/process'
+  annotation-response:
+    dict-key : "annotations"
+    result-key : "result"
 
 mapping:
+  use-bulk-indexing : True
+  index-ingest-mode:
+    same-index: False
+    use-nested-objects: False
+  
   source:
-    text-field: 'document_content'
+    text-field: 'encounter_document'
     docid-field: 'encounter_id'
     persist-fields:
       - 'encounter_id'
-      - 'patient_id'
-      - 'encounter_start'
-      - 'encounter_end'
     batch:
       date-field: 'encounter_start'
       date-format: 'yyyy-MM-dd'
       python-date-format: '%Y-%m-%d' 
-      interval: 30 
-      date-start: '2010-01-01'
-      date-end: '2018-06-01'
+      interval: 7
+      date-start: '1999-01-01'
+      date-end: '2021-02-01'
       threads: 8
   sink:
-    split-index-by-field: 'type'
+    split-index-by-field: ''
+
   nlp:
     skip-processed-doc-check: 'true'
     annotation-id-field: 'id'

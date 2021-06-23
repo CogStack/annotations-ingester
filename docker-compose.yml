@@ -1,6 +1,5 @@
 version: "3.5"
 services:
-
  annotation-ingester:
     build: .
     shm_size : 128mb

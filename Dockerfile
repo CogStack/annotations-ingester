@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.9
 
 WORKDIR /app
 
@@ -6,6 +6,7 @@ WORKDIR /app
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 COPY ./requirements.txt /app
 
+RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 
 # copy the source and config files

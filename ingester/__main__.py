@@ -8,7 +8,6 @@ from ingester.es_common import *
 from ingester.nlp_service import *
 from ingester.annotations_indexer import *
 
-
 class AppConfig:
     """
     The configuration file for the indexer application
@@ -32,7 +31,6 @@ class AppConfig:
         except FileNotFoundError:
             raise Exception("Cannot open configuration file")
 
-
 if __name__ == "__main__":
     # parse the input parameters
     parser = argparse.ArgumentParser(description='ElasticSearch-to-ElasticSearch annotations indexer')
@@ -46,12 +44,10 @@ if __name__ == "__main__":
     # setup logging
     log_format = '[%(asctime)s] [%(levelname)s] %(name)s: %(message)s'
     logging.basicConfig(format=log_format, level=logging.INFO)
+    logging.getLogger('elasticsearch')
 
     try:
         config = AppConfig(args.config)
-
-        # set up Elastic logger for the initialization time
-        logging.getLogger('elasticsearch').setLevel(level=logging.INFO)
 
         # initialize the elastic source
         source_params = config.params['source']
@@ -62,8 +58,8 @@ if __name__ == "__main__":
                                                     client_key_path=src_sec['client-key-path'])
             es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'],
                                                     ssl_config=source_ssl_config)
-        elif 'extra_params' in source_params['es']:
-            e_params = source_params['es']['extra_params']
+        elif 'extra-params' in source_params['es']:
+            e_params = source_params['es']['extra-params']
             es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'], extra_params=e_params)
         else:
             es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'])
@@ -84,8 +80,8 @@ if __name__ == "__main__":
 
             es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'],
                                                   ssl_config=sink_ssl_config)
-        elif 'extra_params' in sink_params['es']:
-            e_params = sink_params['es']['extra_params']
+        elif 'extra-params' in sink_params['es']:
+            e_params = sink_params['es']['extra-params']
             es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'], extra_params=e_params)
         else:
             es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'])
@@ -93,26 +89,30 @@ if __name__ == "__main__":
         es_sink_conn = ElasticConnector(es_sink_conf)
         es_sink = ElasticIndexer(es_sink_conn, sink_params['es']['index-name'])
 
-
         # initialize the indexer
         mapping = config.params['mapping']
-        indexer = BatchAnnotationsIndexer(nlp_service=nlp_service,
+        annoation_indexer_config = AnnotationIndexerConfig(nlp_service=nlp_service,
                                           source_indexer=es_source,
                                           source_text_field=mapping['source']['text-field'],
                                           source_docid_field=mapping['source']['docid-field'],
                                           source_fields_to_persist=mapping['source']['persist-fields'],
-                                          split_index_by_field=mapping['sink']['split-index-by-field'],
                                           sink_indexer=es_sink,
+                                          split_index_by_field=mapping['sink']['split-index-by-field'],
                                           source_batch_date_field=mapping['source']['batch']['date-field'],
                                           batch_date_format=mapping['source']['batch']['date-format'],
                                           skip_doc_check=mapping['nlp']['skip-processed-doc-check'].lower() == "true",
                                           nlp_ann_id_field=mapping['nlp']['annotation-id-field'],
                                           threads=mapping['source']['batch']['threads'],
                                           python_date_format=mapping['source']['batch']['python-date-format'],
-                                          interval=mapping['source']['batch']['interval'])
+                                          interval=mapping['source']['batch']['interval'],
+                                          use_bulk_indexing=mapping['use-bulk-indexing'],
+                                          same_index_ingest=mapping['index-ingest-mode']['same-index'],
+                                          use_nested_objects=mapping['index-ingest-mode']['use-nested-objects'])
+                                          
+        indexer = BatchAnnotationsIndexer(annoation_indexer_config)
+
     except Exception as e:
-        log = logging.getLogger('main')
-        log.error("Cannot initialize the application: " + str(e))
+        logging.error("Cannot initialize the application: " + str(e))
         exit(1)
 
     # set up the Elastic logger to be more verbose and run the indexer
