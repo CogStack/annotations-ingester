@@ -51,7 +51,7 @@ if __name__ == "__main__":
         config = AppConfig(args.config)
 
         # set up Elastic logger for the initialization time
-        logging.getLogger('elasticsearch').setLevel(level=logging.ERROR)
+        logging.getLogger('elasticsearch').setLevel(level=logging.INFO)
 
         # initialize the elastic source
         source_params = config.params['source']
@@ -62,6 +62,9 @@ if __name__ == "__main__":
                                                     client_key_path=src_sec['client-key-path'])
             es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'],
                                                     ssl_config=source_ssl_config)
+        elif 'extra_params' in source_params['es']:
+            e_params = source_params['es']['extra_params']
+            es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'], extra_params=e_params)
         else:
             es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'])
         es_source_conn = ElasticConnector(es_source_conf)
@@ -78,10 +81,15 @@ if __name__ == "__main__":
             sink_ssl_config = SslConnectionConfig(ca_certs_path=sink_sec['ca-certs-path'],
                                                   client_cert_path=sink_sec['client-cert-path'],
                                                   client_key_path=sink_sec['client-key-path'])
-            es_sink_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'],
+
+            es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'],
                                                   ssl_config=sink_ssl_config)
+        elif 'extra_params' in sink_params['es']:
+            e_params = sink_params['es']['extra_params']
+            es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'], extra_params=e_params)
         else:
             es_sink_conf = ElasticConnectorConfig(hosts=sink_params['es']['hosts'])
+
         es_sink_conn = ElasticConnector(es_sink_conf)
         es_sink = ElasticIndexer(es_sink_conn, sink_params['es']['index-name'])
 
@@ -99,7 +107,9 @@ if __name__ == "__main__":
                                           batch_date_format=mapping['source']['batch']['date-format'],
                                           skip_doc_check=mapping['nlp']['skip-processed-doc-check'].lower() == "true",
                                           nlp_ann_id_field=mapping['nlp']['annotation-id-field'],
-                                          threads=mapping['source']['batch']['threads'])
+                                          threads=mapping['source']['batch']['threads'],
+                                          python_date_format=mapping['source']['batch']['python-date-format'],
+                                          interval=mapping['source']['batch']['interval'])
     except Exception as e:
         log = logging.getLogger('main')
         log.error("Cannot initialize the application: " + str(e))

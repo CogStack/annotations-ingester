@@ -1,11 +1,12 @@
-FROM python:3.6-slim
+FROM python:3.8
 
 WORKDIR /app
 
 # configure and install the required packages
 ENV PYTHONPATH="/app:${PYTHONPATH}"
 COPY ./requirements.txt /app
-RUN pip install -r requirements.txt
+
+RUN pip3 install -r requirements.txt
 
 # copy the source and config files
 COPY ./ingester /app/ingester

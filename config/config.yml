@@ -2,6 +2,9 @@ source:
   es:
     hosts: ["https://cogstack:cogstack@localhost:9200"]
     index-name: 'cogstack_observations_view'
+    extra_params:
+      use_ssl: False
+      verify_certs: False
     security:
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
@@ -11,6 +14,9 @@ sink:
   es:
     hosts: ["http://cogstack:cogstack@localhost:9200"]
     index-name: 'cogstack_atomic_annotations'
+    extra_params:
+      use_ssl: False
+      verify_certs: False
     security:
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
@@ -31,6 +37,8 @@ mapping:
     batch:
       date-field: 'encounter_start'
       date-format: 'yyyy-MM-dd'
+      python-date-format: '%Y-%m-%d' 
+      interval: 30 
       date-start: '2010-01-01'
       date-end: '2018-06-01'
       threads: 8
