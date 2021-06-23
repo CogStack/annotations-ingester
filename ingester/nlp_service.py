@@ -3,7 +3,8 @@
 import requests
 
 from ingester.utils import check_url_available
-
+import json
+import logging
 
 ################################
 #
@@ -17,6 +18,8 @@ class NlpService:
         """
         :param url_endpoint: the full url endpoint to query
         """
+        self.log = logging.getLogger(self.__class__.__name__)
+
         assert url_endpoint is not None and len(url_endpoint) > 0
         if url_endpoint is None or len(url_endpoint) == 0 or not check_url_available(url_endpoint):
             raise Exception("Cannot connect to the provided REST service endpoint")
@@ -38,13 +41,16 @@ class NlpService:
             "application_params": application_params,
             "footer": metadata
         }
+
         response = requests.post(self.url_endpoint, json=query_body)
 
-        # TODO: error handling
-        assert response.ok
-        assert 'result' in response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            self.log.warning("document did not return the correct response, status code: "
+             + str(response.status_code) + "  " + response.reason + "\n The document will be reprocessed at the next check")
 
-        return response.json()
+        return {}
 
 
 ################################
@@ -62,7 +68,6 @@ class BioyodieService(NlpService):
         super().__init__(url_endpoint)
 
     def query(self, text, metadata={}, application_params={'annotationSets': "Bio:*"}):
-    #def query(self, text, metadata={}, application_params={}):
         """
         Sends the document to the NLP service to receive back the annotations
         :param text: the text to be processed

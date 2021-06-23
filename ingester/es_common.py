@@ -60,7 +60,7 @@ class ElasticConnector:
                                                       client_key=elastic_conf.ssl_config.client_key_path,
                                                       retry_on_timeout=True)
             elif elastic_conf.extra_params is not None:
-                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, verify_certs=elastic_conf.extra_params['verify_certs'], use_ssl=elastic_conf.extra_params['use_ssl'], retry_on_timeout=True)
+                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, verify_certs=elastic_conf.extra_params['verify-certs'], use_ssl=elastic_conf.extra_params['use-ssl'], retry_on_timeout=True)
             else:
                 self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, retry_on_timeout=True)
                 if self.es.ping() is not True:
@@ -79,7 +79,7 @@ class ElasticIndexer:
     """
 
     # the size of chunk when indexing documents in bulk
-    BULK_CHUNK_SIZE = 5000
+    BULK_CHUNK_SIZE = 1000
     BULK_REQUEST_TIMEOUT_S = 30
 
     def __init__(self, es_connector, index_name):
@@ -187,12 +187,12 @@ class ElasticIndexer:
                                                                        request_timeout=self.BULK_REQUEST_TIMEOUT_S):
                 if status is False:
                     failed_docs += 1
-
             if failed_docs:
                 self.log.warn("Failed indexing documents in bulk: %d " % failed_docs)
 
         except Exception as e:
             self.log.error("Exception caught while indexing documents in bulk: " + str(e))
+            self.log.error(repr(e))
 
     def get_doc(self, doc_id, index_suffix=""):
         """
