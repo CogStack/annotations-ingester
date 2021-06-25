@@ -41,13 +41,16 @@ if __name__ == "__main__":
         parser.print_usage()
         exit(0)
 
-    # setup logging
-    log_format = '[%(asctime)s] [%(levelname)s] %(name)s: %(message)s'
-    logging.basicConfig(format=log_format, level=logging.INFO)
-    logging.getLogger('elasticsearch')
-
     try:
         config = AppConfig(args.config)
+
+        # setup logging
+        log_format = '[%(asctime)s] [%(levelname)s] %(name)s: %(message)s'
+        if config.params['logging-level']:
+            logging.basicConfig(format=log_format, level=logging.INFO)
+        else:
+            logging.basicConfig(format=log_format, level=config.params['logging-level'])
+        logging.getLogger('elasticsearch')
 
         # initialize the elastic source
         source_params = config.params['source']

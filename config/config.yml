@@ -31,8 +31,8 @@ nlp-service:
 mapping:
   use-bulk-indexing : True
   index-ingest-mode:
-    same-index: False
-    use-nested-objects: False
+    same-index: True
+    use-nested-objects: True
   
   source:
     text-field: 'encounter_document'
@@ -53,3 +53,6 @@ mapping:
   nlp:
     skip-processed-doc-check: 'true'
     annotation-id-field: 'id'
+
+# DEBUG = 10 , INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50
+logging-level: "20"

@@ -134,7 +134,6 @@ class AnnotationsIndexer:
                         }
                     },
                     '_index' : self.annotation_indexer_config.source_indexer.get_index_name()
-           
                 }
             yield operation
         else:
