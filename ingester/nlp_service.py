@@ -3,7 +3,6 @@
 import requests
 
 from ingester.utils import check_url_available
-import json
 import logging
 
 ################################
@@ -14,7 +13,7 @@ class NlpService:
     """
     The NLP service for querying the NLP REST API
     """
-    def __init__(self, url_endpoint):
+    def __init__(self, url_endpoint, use_bulk_indexing):
         """
         :param url_endpoint: the full url endpoint to query
         """
@@ -25,6 +24,7 @@ class NlpService:
             raise Exception("Cannot connect to the provided REST service endpoint")
 
         self.url_endpoint = url_endpoint
+        self.use_bulk_indexing = use_bulk_indexing
 
     def query(self, text, metadata={}, application_params={}):
         """

@@ -29,14 +29,14 @@ class ElasticConnectorConfig:
     ElasticSearch connector configuration
     All the hosts details are specified using RFC-1738
     """
-    def __init__(self, hosts, extra_params=None, ssl_config=None):
+    def __init__(self, hosts, credentials=None, extra_params=None, ssl_config=None):
         """
         :param hosts: the ElasticSearch hosts specified in RFC-1738 format
         """
         self.hosts = hosts
+        self.credentials = credentials
         self.ssl_config = ssl_config
         self.extra_params= extra_params
-
 
 ################################
 #
@@ -53,20 +53,30 @@ class ElasticConnector:
         """
         # check whether we can actually connect to ElasticSearch
         try:
+            args = {
+                "verify_certs" : elastic_conf.extra_params['verify-certs'],
+                "use_ssl" : elastic_conf.extra_params['use-ssl']
+            }
+            from ssl import create_default_context
+
+            #context = create_default_context(cafile='cert.pem')
+            ssl_context = None
             if elastic_conf.ssl_config is not None:
-                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts,
-                                                      ca_certs=elastic_conf.ssl_config.ca_certs_path,
-                                                      client_cert=elastic_conf.ssl_config.client_cert_path,
-                                                      client_key=elastic_conf.ssl_config.client_key_path,
-                                                      retry_on_timeout=True)
-            elif elastic_conf.extra_params is not None:
-                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, verify_certs=elastic_conf.extra_params['verify-certs'], use_ssl=elastic_conf.extra_params['use-ssl'], retry_on_timeout=True)
+                args["ca_certs"] = elastic_conf.ssl_config.ca_certs_path
+                args["client_cert"] = elastic_conf.ssl_config.client_cert_path
+                args["client_key"] = elastic_conf.ssl_config.client_key_path
+          
+            if elastic_conf.credentials["use-api-key"]:
+                args["api_key"] = (elastic_conf.credentials["username"], elastic_conf.credentials["password"])
             else:
-                self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, retry_on_timeout=True)
-                if self.es.ping() is not True:
-                    raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
-        except:
-            raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
+                args["http_auth"] = (elastic_conf.credentials["username"], elastic_conf.credentials["password"])
+
+            self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, retry_on_timeout=True, ssl_context=ssl_context, **args)
+
+            if self.es.ping() is not True:
+                raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
+        except Exception as e:
+            raise Exception(str(e))
 
 
 ################################
@@ -158,7 +168,7 @@ class ElasticIndexer:
         :param index_suffix: optional suffix of the index to store the document
         """
         try:
-            self.conn.es.index(index=self.get_index_name(index_suffix), doc_type=self.doc_type, id=doc_id, body=doc)
+            self.conn.es.index(index=self.get_index_name(index_suffix), id=doc_id, body=doc)
         except Exception as e:
             self.log.error("Exception caught while indexing document: " + str(e))
 
@@ -170,7 +180,7 @@ class ElasticIndexer:
         """
         index_name = self.get_index_name(index_suffix)
         try:
-            elasticsearch.helpers.bulk(self.conn.es, docs, index=index_name, doc_type=self.doc_type)
+            elasticsearch.helpers.bulk(self.conn.es, docs, index=index_name)
         except Exception as e:
             self.log.error("Exception caught while indexing documents in bulk: " + str(e))
 
@@ -192,7 +202,6 @@ class ElasticIndexer:
 
         except Exception as e:
             self.log.error("Exception caught while indexing documents in bulk: " + str(e))
-            self.log.error(repr(e))
 
     def get_doc(self, doc_id, index_suffix=""):
         """
@@ -201,7 +210,7 @@ class ElasticIndexer:
         :param index_suffix: optional suffix of the index to store the document
         :return: the document represented as KVPs dictionary
         """
-        res = self.conn.es.get(index=self.get_index_name(index_suffix), doc_type=self.doc_type, id=doc_id)
+        res = self.conn.es.get(index=self.get_index_name(index_suffix), id=doc_id)
         assert '_source' in res
         return res['_source']
 
@@ -261,8 +270,7 @@ class ElasticIndexer:
         ids_generator = elasticsearch.helpers.scan(self.conn.es,
                                                    query=query_body,
                                                    index=self.get_index_name(suffix=index_suffix,
-                                                                             search_only=True),
-                                                   doc_type=self.doc_type)
+                                                                             search_only=True))
         ids = [hit['_id'] for hit in ids_generator]
         return ids
 
@@ -300,7 +308,6 @@ class ElasticRangedIndexer(ElasticIndexer):
 
         ids_generator = elasticsearch.helpers.scan(self.conn.es,
                                                    query=query_body,
-                                                   index=self.get_index_name(index_suffix),
-                                                   doc_type=self.doc_type)
+                                                   index=self.get_index_name(index_suffix))
         ids = [hit['_id'] for hit in ids_generator]
         return ids
