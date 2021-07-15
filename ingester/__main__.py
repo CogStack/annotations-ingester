@@ -70,8 +70,10 @@ if __name__ == "__main__":
         es_source = ElasticRangedIndexer(es_source_conn, source_params['es']['index-name'])
 
         # initialize NLP service
-        nlp_service = NlpService(config.params['nlp-service']['endpoint-url'], config.params['nlp-service']['use-bulk-indexing'])
-
+        nlp_service = NlpService(config.params['nlp-service']['endpoint-url'],
+          config.params['nlp-service']['use-bulk-indexing'],
+          config.params['nlp-service']['credentials']['username'],
+          config.params['nlp-service']['credentials']['password'])
 
         # initialize the elastic sink
         sink_params = config.params['sink']
@@ -107,7 +109,8 @@ if __name__ == "__main__":
                                           python_date_format=mapping['source']['batch']['python-date-format'],
                                           interval=mapping['source']['batch']['interval'],
                                           same_index_ingest=mapping['index-ingest-mode']['same-index'],
-                                          use_nested_objects=mapping['index-ingest-mode']['use-nested-objects'])
+                                          use_nested_objects=mapping['index-ingest-mode']['use-nested-objects'],
+                                          es_nested_object_schema_mapping=mapping['index-ingest-mode']['es-nested-object-schema-mapping'])
                                           
         indexer = BatchAnnotationsIndexer(annoation_indexer_config)
 

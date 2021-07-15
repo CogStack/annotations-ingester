@@ -3,7 +3,7 @@
 import elasticsearch
 import elasticsearch.helpers
 import logging
-
+from ssl import create_default_context
 
 ################################
 #
@@ -57,10 +57,9 @@ class ElasticConnector:
                 "verify_certs" : elastic_conf.extra_params['verify-certs'],
                 "use_ssl" : elastic_conf.extra_params['use-ssl']
             }
-            from ssl import create_default_context
 
-            #context = create_default_context(cafile='cert.pem')
-            ssl_context = None
+            ssl_context = None # create_default_context(cafile='cert.pem')
+
             if elastic_conf.ssl_config is not None:
                 args["ca_certs"] = elastic_conf.ssl_config.ca_certs_path
                 args["client_cert"] = elastic_conf.ssl_config.client_cert_path
@@ -71,11 +70,12 @@ class ElasticConnector:
             else:
                 args["http_auth"] = (elastic_conf.credentials["username"], elastic_conf.credentials["password"])
 
-            self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, retry_on_timeout=True, ssl_context=ssl_context, **args)
+            self.es = elasticsearch.Elasticsearch(hosts=elastic_conf.hosts, retry_on_timeout=True,  **args)
 
             if self.es.ping() is not True:
                 raise Exception("Cannot connect to ElasticSearch: %s" % str(elastic_conf.hosts))
-        except Exception as e:
+        except Exception as e:           
+            logging.error(repr(e))
             raise Exception(str(e))
 
 
@@ -201,7 +201,7 @@ class ElasticIndexer:
                 self.log.warn("Failed indexing documents in bulk: %d " % failed_docs)
 
         except Exception as e:
-            self.log.error("Exception caught while indexing documents in bulk: " + str(e))
+            self.log.error("Exception caught while indexing documents in bulk:str" + str(e))
 
     def get_doc(self, doc_id, index_suffix=""):
         """
@@ -211,8 +211,18 @@ class ElasticIndexer:
         :return: the document represented as KVPs dictionary
         """
         res = self.conn.es.get(index=self.get_index_name(index_suffix), id=doc_id)
+
         assert '_source' in res
-        return res['_source']
+
+        result = res["_source"]
+        if "_id" in res.keys():
+            result.update({"_id": res["_id"]})
+        if "_type" in res.keys():
+            result.update({"_type": res["_type"]})
+        if "_index" in res.keys():
+            result.update({"_index": res["_index"]})
+
+        return result
 
     def get_doc_ids(self, index_suffix=""):
         """
@@ -272,6 +282,7 @@ class ElasticIndexer:
                                                    index=self.get_index_name(suffix=index_suffix,
                                                                              search_only=True))
         ids = [hit['_id'] for hit in ids_generator]
+        
         return ids
 
 

@@ -13,7 +13,7 @@ class NlpService:
     """
     The NLP service for querying the NLP REST API
     """
-    def __init__(self, url_endpoint, use_bulk_indexing):
+    def __init__(self, url_endpoint, use_bulk_indexing, username, password):
         """
         :param url_endpoint: the full url endpoint to query
         """
@@ -25,6 +25,8 @@ class NlpService:
 
         self.url_endpoint = url_endpoint
         self.use_bulk_indexing = use_bulk_indexing
+        self.username = username
+        self.password = password
 
     def query(self, text, metadata={}, application_params={}):
         """
@@ -38,16 +40,17 @@ class NlpService:
             "content": {
                 "text": text
             },
-            "application_params": application_params,
+            "application_params": application_params,   
             "footer": metadata
         }
 
-        response = requests.post(self.url_endpoint, json=query_body)
+        response = requests.post(self.url_endpoint, json=query_body, headers={"Access-Control-Allow-Origin" : "*", "Content-Type": "application/json"}, auth=(self.username, self.password))
 
         if response.status_code == 200:
             return response.json()
         else:
             self.log.warning("document did not return the correct response, status code: "
+            + str(response.content)
              + str(response.status_code) + "  " + response.reason + "\n The document will be reprocessed at the next check")
 
         return {}

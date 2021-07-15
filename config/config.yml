@@ -1,6 +1,6 @@
 source:
   es:
-    hosts: ["http://localhost:9200"]
+    hosts: ["http://127.0.0.1:9200"]
     credentials:
       username : "elastic"
       password : "admin"
@@ -16,7 +16,7 @@ source:
 
 sink:
   es:
-    hosts: ["http://localhost:9200"]
+    hosts: ["http://127.0.0.1:9200"]
     credentials:
       username : "elastic"
       password : "admin"
@@ -31,21 +31,25 @@ sink:
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: 'http://localhost:8095/api/process'
+  endpoint-url: 'http://127.0.0.1:5555/api/process'
   use-bulk-indexing : True
   annotation-response:
     dict-key : "annotations"
     result-key : "result"
+  credentials :  
+    username : ""
+    password : ""
 
 mapping:
   index-ingest-mode:
-    same-index: True
+    same-index: False
     use-nested-objects: False
+    es-nested-object-schema-mapping : ""
   source:
     text-field: 'document'
     docid-field: '_id'
     persist-fields:
-      - '_id'
+    #  - 'id'
     batch:
       date-field: 'dct'
       date-format: 'yyyy-MM-dd'
@@ -57,7 +61,7 @@ mapping:
   sink:
     split-index-by-field: '' # 'type', splits into different indices with separate prefix
   nlp:
-    skip-processed-doc-check: False
+    skip-processed-doc-check: True
     annotation-id-field: 'id'
 
 # DEBUG = 10 , INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50

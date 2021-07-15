@@ -47,6 +47,7 @@ class AnnotationIndexerConfig:
     interval : int = 30
     same_index_ingest : bool = False
     use_nested_objects : bool = False
+    es_nested_object_schema_mapping : str = ""
 
 ################################
 #
@@ -106,12 +107,13 @@ class AnnotationsIndexer:
         """
         if self.annotation_indexer_config.same_index_ingest:
             self.annotation_indexer_config.source_indexer.conn.es.update(index=self.annotation_indexer_config.source_indexer.get_index_name(),
-             body={"doc" : {"annotations" : annotations}},id=src_doc_id)
+             body={"doc" : {"annotations" : annotations}}, id=src_doc_id)
         else:
             for ann in annotations:
                 # update annotation entry with fields from the document t4o persist and with prefix
                 refined_ann = {}
-                for field in self.annotation_indexer_config.source_fields_to_persist:
+                if self.annotation_indexer_config.source_fields_to_persist:
+                  for field in self.annotation_indexer_config.source_fields_to_persist:
                     if field in document:
                         refined_field = "%s.%s" % (self.FIELD_META_PREFIX, field)
                         refined_ann[refined_field] = document[field]
@@ -133,14 +135,13 @@ class AnnotationsIndexer:
         """
         # if we choose to ingest back into the same index we create an extra field
         if self.annotation_indexer_config.same_index_ingest:
-            
             operation = {
                     "_id": src_doc_id,
                     "_op_type": "update",
                     "script" : {
                         "lang": "painless",
-                        "source" : "ctx._source.annotations = [] ; ctx._source.annotations.add(params.annotations)",
-                        "params" : { "annotations" : list(annotations_entities.values()) }
+                        "source" : "ctx._source.annotations = new ArrayList();  ctx._source.annotations = params.annotations",
+                        "params" : {"annotations" : list(annotations_entities.values())}
                     },
                     "_index" : self.annotation_indexer_config.source_indexer.get_index_name()
                 }
@@ -148,11 +149,11 @@ class AnnotationsIndexer:
         else:
             for index, entity in annotations_entities.items():
                 refined_ann = {}
-                for field in self.annotation_indexer_config.source_fields_to_persist:
-                    for field in self.annotation_indexer_config.source_fields_to_persist:
-                        if field in document:
-                            refined_field = "%s.%s" % (self.FIELD_META_PREFIX, field)
-                            refined_ann[refined_field] = document[field]
+                if self.annotation_indexer_config.source_fields_to_persist:
+                  for field in self.annotation_indexer_config.source_fields_to_persist:
+                    if field in document:
+                        refined_field = "%s.%s" % (self.FIELD_META_PREFIX, field)
+                        refined_ann[refined_field] = document[field]
 
                 for field, value in entity.items():
                     refined_field = "%s.%s" % (self.FIELD_ANN_PREFIX, field)
@@ -276,14 +277,99 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         if self.annotation_indexer_config.same_index_ingest:
             mappings = self.annotation_indexer_config.source_indexer.conn.es.indices.get_mapping(index=self.annotation_indexer_config.source_indexer.get_index_name())
             if "annotations" not in mappings[self.annotation_indexer_config.source_indexer.get_index_name()]["mappings"]["properties"]:
+              request_body = {
+                          "properties": {
+                                  "annotations": {
+                                      "type" : "nested" if self.annotation_indexer_config.use_nested_objects else "flattened"
+                              }
+                          }
+                      }
+
+              if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat":
+
                 request_body = {
-                            "properties": {
-                                    "annotations": {
-                                        "type" : "nested" if self.annotation_indexer_config.use_nested_objects else "flattened"
-                                }
+                    "properties": {
+                      "annotations": {
+                        "type" : "nested",
+                        "properties": {
+                        "acc": {
+                          "type": "float"
+                        },
+                        "context_similarity": {
+                          "type": "float"
+                        },
+                        "cui": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
                             }
+                          }
+                        },
+                        "detected_name": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "end": {
+                          "type": "long"
+                        },
+                        "id": {
+                          "type": "long"
+                        },
+                        "meta_anns" : {
+                          "type" : "nested"
+                        },
+                        "pretty_name": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "source_value": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "start": {
+                          "type": "long"
+                        },
+                        "tuis": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "types": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
                         }
-                self.annotation_indexer_config.source_indexer.conn.es.indices.put_mapping(body=json.dumps(request_body), index=self.annotation_indexer_config.source_indexer.get_index_name())
+                      }
+                      }
+                    }
+                  }
+
+              self.annotation_indexer_config.source_indexer.conn.es.indices.put_mapping(body=json.dumps(request_body), index=self.annotation_indexer_config.source_indexer.get_index_name())
 
         continue_read = True
  
