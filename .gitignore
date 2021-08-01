@@ -1,5 +1,9 @@
+# IDE
 .DS_Store
 .idea
+.vscode
+
+# python
 *.pyc
 venv
 __pycache__

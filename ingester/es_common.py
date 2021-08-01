@@ -201,7 +201,7 @@ class ElasticIndexer:
                 self.log.warn("Failed indexing documents in bulk: %d " % failed_docs)
 
         except Exception as e:
-            self.log.error("Exception caught while indexing documents in bulk:str" + str(e))
+            self.log.error("Exception caught while indexing documents in bulk: " + str(e))
 
     def get_doc(self, doc_id, index_suffix=""):
         """

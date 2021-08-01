@@ -107,7 +107,7 @@ class AnnotationsIndexer:
         """
         if self.annotation_indexer_config.same_index_ingest:
             self.annotation_indexer_config.source_indexer.conn.es.update(index=self.annotation_indexer_config.source_indexer.get_index_name(),
-             body={"doc" : {"annotations" : annotations}}, id=src_doc_id)
+             body = {"doc" : {"annotations" : annotations}}, id=src_doc_id)
         else:
             for ann in annotations:
                 # update annotation entry with fields from the document t4o persist and with prefix
@@ -133,6 +133,7 @@ class AnnotationsIndexer:
         """
             Returns a generator to create annotation documents -- used for ES bulk indexing
         """
+
         # if we choose to ingest back into the same index we create an extra field
         if self.annotation_indexer_config.same_index_ingest:
             operation = {
@@ -147,6 +148,7 @@ class AnnotationsIndexer:
                 }
             yield operation
         else:
+          
             for index, entity in annotations_entities.items():
                 refined_ann = {}
                 if self.annotation_indexer_config.source_fields_to_persist:
@@ -171,6 +173,7 @@ class AnnotationsIndexer:
                     '_index': index_name,
                     '_source': refined_ann
                 }
+
                 yield operation
 
     def _index_annotations_bulk(self, annotations, document, src_doc_id):
@@ -206,24 +209,36 @@ class AnnotationsIndexer:
             self.log.info('- querying the NLP service')
             nlp_response = self.annotation_indexer_config.nlp_service.query(text=doc_text)
             self.log.info('Finished processing NLP for document with id: ' + src_doc_id)
-          
-            if "result" not in nlp_response.keys():
-                self.log.error(" - no result payload returned from NLP service")
-                return
-            result = json.loads(nlp_response["result"])
 
-            if 'annotations' not in result.keys() or result['annotations'] is None:
+            if "result" in nlp_response.keys():
+              result = json.loads(nlp_response["result"])
+
+              if 'annotations' not in result.keys() or result['annotations'] is None or result is None:
                 self.log.error(" - no annotations available in the NLP result payload")
-                return
+                return 
 
-            if 'entities' not in result['annotations'].keys() or result['annotations']['entities'] is None:
+              if 'entities' not in result["annotations"].keys() or result["annotations"]["entities"] is None :
                 self.log.error(" - no annotation entities available in the NLP result payload")
                 return
 
+              result = result['annotations']['entities']
+
+            elif "entities" in nlp_response.keys():
+              # Entities are present alone only when using GATE-NLP MODE ENDPOINT
+              if nlp_response["entities"] is not None:
+                result = nlp_response["entities"]
+              else:
+                self.log.error(" - no annotation entities available in the NLP result payload")
+                return
+
+            elif "result" not in nlp_response.keys() or "entities" not in nlp_response.keys():
+                self.log.error(" - no result payload returned from NLP service")
+                return
+
             if self.annotation_indexer_config.nlp_service.use_bulk_indexing:
-                self._index_annotations_bulk(result['annotations']['entities'], doc, src_doc_id)
+                self._index_annotations_bulk(result, doc, src_doc_id)
             else:
-                self._index_annotations(result['annotations']['entities'], doc, src_doc_id)
+                self._index_annotations(result, doc, src_doc_id)
            
         except Exception as e:
             self.log.error(repr(e))
@@ -285,7 +300,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                           }
                       }
 
-              if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat":
+              if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat-nested-object":
 
                 request_body = {
                     "properties": {
@@ -368,8 +383,411 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                       }
                     }
                   }
-
-              self.annotation_indexer_config.source_indexer.conn.es.indices.put_mapping(body=json.dumps(request_body), index=self.annotation_indexer_config.source_indexer.get_index_name())
+           
+              if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "gate-nlp-nested-object":
+                 request_body = {
+                    "properties": {
+                      "annotations": {
+                        "type" : "nested",
+                          "properties": {
+                          "nlp": {
+                            "properties": {
+                              "NMRule": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "firstName": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "gender": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "id": {
+                                "type": "long",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "indices": {
+                                "type": "long"
+                              },
+                              "initials": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "kind": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "matchedWithLonger": {
+                                "type": "boolean"
+                              },
+                              "matches": {
+                                "type": "long"
+                              },
+                              "orgType": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "orgType ": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "rule": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "rule ": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "ruleFinal": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "surname": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "title": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "type": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+           
+        if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat-separate-index":
+          request_body = {
+            "properties": {
+                    "nlp": {
+                      "properties": {
+                        "acc": {
+                          "type": "float"
+                        },
+                        "context_similarity": {
+                          "type": "float"
+                        },
+                        "cui": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "detected_name": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "end": {
+                          "type": "long"
+                        },
+                        "id": {
+                          "type": "long"
+                        },
+                        "meta_anns": {
+                          "properties": {
+                            "Status": {
+                              "properties": {
+                                "confidence": {
+                                  "type": "float"
+                                },
+                                "name": {
+                                  "type": "text",
+                                  "fields": {
+                                    "keyword": {
+                                      "type": "keyword",
+                                      "ignore_above": 256
+                                    }
+                                  }
+                                },
+                                "value": {
+                                  "type": "text",
+                                  "fields": {
+                                    "keyword": {
+                                      "type": "keyword",
+                                      "ignore_above": 256
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "pretty_name": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "source_value": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "start": {
+                          "type": "long"
+                        },
+                        "tuis": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        },
+                        "types": {
+                          "type": "text",
+                          "fields": {
+                            "keyword": {
+                              "type": "keyword",
+                              "ignore_above": 256
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+        
+        if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "gate-nlp-separate-index":
+                request_body = {
+                        "properties": {
+                          "nlp": {
+                            "properties": {
+                              "NMRule": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "firstName": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "gender": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "id": {
+                                "type": "long",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "indices": {
+                                "type": "long"
+                              },
+                              "initials": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "kind": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "matchedWithLonger": {
+                                "type": "boolean"
+                              },
+                              "matches": {
+                                "type": "long"
+                              },
+                              "orgType": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "orgType ": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "rule": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "rule ": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "ruleFinal": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "surname": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "title": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              },
+                              "type": {
+                                "type": "text",
+                                "fields": {
+                                  "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+        
+        self.annotation_indexer_config.source_indexer.conn.es.indices.put_mapping(body=json.dumps(request_body), index=self.annotation_indexer_config.source_indexer.get_index_name())
 
         continue_read = True
  

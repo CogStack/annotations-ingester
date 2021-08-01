@@ -71,9 +71,10 @@ if __name__ == "__main__":
 
         # initialize NLP service
         nlp_service = NlpService(config.params['nlp-service']['endpoint-url'],
-          config.params['nlp-service']['use-bulk-indexing'],
-          config.params['nlp-service']['credentials']['username'],
-          config.params['nlp-service']['credentials']['password'])
+          endpoint_request_mode=config.params['nlp-service']['endpoint-request-mode'],
+          use_bulk_indexing=config.params['nlp-service']['use-bulk-indexing'],
+          username=config.params['nlp-service']['credentials']['username'],
+          password=config.params['nlp-service']['credentials']['password'])
 
         # initialize the elastic sink
         sink_params = config.params['sink']

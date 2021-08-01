@@ -45,10 +45,19 @@ Entires under the key `extra_params` are optional, useful for test cases or depl
 
 ### NLP service
 - `endpoint-url` 
+- `endpoint-request-mode` , this is either left empty, or in case of use with the GATE NLP Annie annotation service it should be set to `gate-nlp`
 - `use-bulk-indexing` ingest in bulk mode (1000 docs / bulk chunk), 
+
+- `credentials`
+    - `username` and `password` can be used to provide connection credentials
 
 ### Fields mapping
 Entries under `mapping` key define the mapping of the document fields for the ingestion.
+
+The sub-entry `index-ingest-mode` defines: 
+- `same-index`: `False` , set to `True` if you wish to ingest annotations into the same index
+- `use-nested-objects` : 'False` , set to True if you wish to ingest into the same index with nested object type, useful but beware of search query speed impact
+- `es-nested-object-schema-mapping` : for medcat annotations use `medcat-separate-index` or `medcat-nested-object` , for GATE-nlp use `gate-nlp-separate-index` or `gate-nlp-nested-object`
 
 The sub-entry `source` defines the field names that contain:
 - `text-field` - the free text to be processed, 

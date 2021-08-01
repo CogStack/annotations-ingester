@@ -21,7 +21,7 @@ sink:
       username : "elastic"
       password : "admin"
       use-api-key : False
-    index-name: 'medical_reports_text_annotations'
+    index-name: 'medical_reports_text_annotations_gate_nlp'
     extra-params:
       use-ssl: False
       verify-certs: False
@@ -31,7 +31,8 @@ sink:
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: 'http://127.0.0.1:5555/api/process'
+  endpoint-url: 'http://localhost:5555/api/process'
+  endpoint-request-mode : ''
   use-bulk-indexing : True
   annotation-response:
     dict-key : "annotations"
@@ -66,3 +67,4 @@ mapping:
 
 # DEBUG = 10 , INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50
 logging-level: "20"
+
