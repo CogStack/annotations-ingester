@@ -207,11 +207,13 @@ class AnnotationsIndexer:
     
             # query the NLP service and retrieve back the annotations
             self.log.info('- querying the NLP service')
+
             nlp_response = self.annotation_indexer_config.nlp_service.query(text=doc_text)
+
             self.log.info('Finished processing NLP for document with id: ' + src_doc_id)
 
             if "result" in nlp_response.keys():
-              result = json.loads(nlp_response["result"])
+              result = nlp_response["result"]
 
               if 'annotations' not in result.keys() or result['annotations'] is None or result is None:
                 self.log.error(" - no annotations available in the NLP result payload")
@@ -287,10 +289,13 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
         :param batch_date_start: the start date of the documents batch
         :param batch_date_end: the end date of the documents batch
         """
+        
+        request_body = {}
 
         # if we are going to ingest into the same index, we must make sure that the annotations field exists and is of the correct type
         if self.annotation_indexer_config.same_index_ingest:
             mappings = self.annotation_indexer_config.source_indexer.conn.es.indices.get_mapping(index=self.annotation_indexer_config.source_indexer.get_index_name())
+            
             if "annotations" not in mappings[self.annotation_indexer_config.source_indexer.get_index_name()]["mappings"]["properties"]:
               request_body = {
                           "properties": {
@@ -382,7 +387,7 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                       }
                       }
                     }
-                  }
+                  }\
            
               if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "gate-nlp-nested-object":
                  request_body = {
@@ -533,8 +538,8 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                       }
                     }
                   }
-           
-        if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat-separate-index":
+
+        if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat-separate-index" or len(self.annotation_indexer_config.es_nested_object_schema_mapping) == 0:
           request_body = {
             "properties": {
                     "nlp": {

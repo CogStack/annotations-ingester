@@ -4,6 +4,7 @@ import requests
 
 from ingester.utils import check_url_available
 import logging
+import json
 
 ################################
 #
@@ -48,6 +49,7 @@ class NlpService:
                 "footer": metadata
             }
             response = requests.post(self.url_endpoint, json=query_body, headers={"Access-Control-Allow-Origin" : "*"}, auth=(self.username, self.password))
+
         elif self.endpoint_request_mode == 'gate-nlp':
             query_body = text
             response = requests.post(self.url_endpoint, data=query_body, headers={"Access-Control-Allow-Origin" : "*", "Content-Type": "text/plain"}, auth=(self.username, self.password))
@@ -55,6 +57,12 @@ class NlpService:
         if response.status_code == 200:
             response = response.json()
 
+            if "result" in response.keys():
+                response["result"] = json.loads(response["result"])
+                if "medcat_info" in response.keys() and "annotations" in response["result"].keys():
+                    for k in response["result"]["annotations"]["entities"].keys():
+                        response["result"]["annotations"]["entities"][k].update(response["medcat_info"])
+                            
             # Entities are present alone only when using GATE-NLP MODE ENDPOINT, they need formatting to match the MedCAT entities structure
             if self.endpoint_request_mode == 'gate-nlp':
                 if "entities" in response.keys() and response["entities"] is not None:

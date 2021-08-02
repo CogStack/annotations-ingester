@@ -31,7 +31,7 @@ sink:
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: 'http://localhost:5555/api/process'
+  endpoint-url: ['http://localhost:5555/api/process']
   endpoint-request-mode : ''
   use-bulk-indexing : True
   annotation-response:
@@ -50,7 +50,7 @@ mapping:
     text-field: 'document'
     docid-field: '_id'
     persist-fields:
-    #  - 'id'
+     - '_id'
     batch:
       date-field: 'dct'
       date-format: 'yyyy-MM-dd'
