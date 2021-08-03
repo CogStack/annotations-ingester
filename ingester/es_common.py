@@ -4,6 +4,7 @@ import elasticsearch
 import elasticsearch.helpers
 import logging
 from ssl import create_default_context
+import os
 
 ################################
 #
@@ -13,12 +14,14 @@ class SslConnectionConfig:
     """
     SSL connection configuration for ElasticSearch
     """
-    def __init__(self, ca_certs_path, client_cert_path, client_key_path):
+    def __init__(self, ca_file_path=None, ca_certs_path=None, client_cert_path=None, client_key_path=None):
         """
+        :param ca_file_path: param for CA cert file(PEM) used with SSL_CONTEXT
         :param ca_certs_path: path for CA cert file (PEM)
         :param ca_certs_path: path for client cert file (PEM)
         :param ca_certs_path: path for client key file (PEM)
         """
+        self.ca_file_path = ca_file_path
         self.ca_certs_path = ca_certs_path
         self.client_cert_path = client_cert_path
         self.client_key_path = client_key_path
@@ -58,9 +61,11 @@ class ElasticConnector:
                 "use_ssl" : elastic_conf.extra_params['use-ssl']
             }
 
-            ssl_context = None # create_default_context(cafile='cert.pem')
-
             if elastic_conf.ssl_config is not None:
+                if elastic_conf.ssl_config.ca_file_path is not None:
+                    if os.path.isfile(elastic_conf.ssl_config.ca_file_path):
+                        args["ssl_context"] = create_default_context(cafile=elastic_conf.ssl_config.ca_file_path)
+
                 args["ca_certs"] = elastic_conf.ssl_config.ca_certs_path
                 args["client_cert"] = elastic_conf.ssl_config.client_cert_path
                 args["client_key"] = elastic_conf.ssl_config.client_key_path

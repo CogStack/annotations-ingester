@@ -10,6 +10,7 @@ source:
       use-ssl: False
       verify-certs: False
     security:
+      ca-file-path : "/app/config/cert.pem"
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
       client-key-path: "/app/config/client.key"
@@ -21,17 +22,18 @@ sink:
       username : "elastic"
       password : "admin"
       use-api-key : False
-    index-name: 'medical_reports_text_annotations_gate_nlp'
+    index-name: 'medical_reports_text_annotations'
     extra-params:
       use-ssl: False
       verify-certs: False
     security:
+      ca-file-path : "/app/config/cert.pem"
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: ['http://localhost:5555/api/process']
+  endpoint-url: 'http://localhost:5555/api/process'
   endpoint-request-mode : ''
   use-bulk-indexing : True
   annotation-response:

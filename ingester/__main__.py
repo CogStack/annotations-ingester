@@ -59,9 +59,10 @@ if __name__ == "__main__":
         source_extra_params = source_params['es']['extra-params'] if source_params['es']['extra-params'] else None
         source_security = source_params['es']['security']  if source_params['es']['security'] else None
 
-        source_ssl_config = SslConnectionConfig(ca_certs_path=source_security['ca-certs-path'],
-                                                    client_cert_path=source_security['client-cert-path'],
-                                                    client_key_path=source_security['client-key-path'])
+        source_ssl_config = SslConnectionConfig(ca_file_path=source_security['ca-file-path'],
+                                                ca_certs_path=source_security['ca-certs-path'],
+                                                client_cert_path=source_security['client-cert-path'],
+                                                client_key_path=source_security['client-key-path'])
 
         es_source_conf = ElasticConnectorConfig(hosts=source_params['es']['hosts'], credentials=source_credentials, extra_params=source_extra_params,
                                                    ssl_config=source_ssl_config)
@@ -83,9 +84,10 @@ if __name__ == "__main__":
         sink_extra_params = sink_params['es']['extra-params'] if sink_params['es']['extra-params'] else None
         sink_security = sink_params['es']['security']  if sink_params['es']['security'] else None
 
-        sink_ssl_config = SslConnectionConfig(ca_certs_path=sink_security['ca-certs-path'],
-                                                    client_cert_path=sink_security['client-cert-path'],
-                                                    client_key_path=sink_security['client-key-path'])
+        sink_ssl_config = SslConnectionConfig(ca_file_path=sink_security['ca-file-path'],
+                                              ca_certs_path=sink_security['ca-certs-path'],
+                                              client_cert_path=sink_security['client-cert-path'],
+                                              client_key_path=sink_security['client-key-path'])
 
         es_sink_conf =  ElasticConnectorConfig(hosts=sink_params['es']['hosts'], credentials=sink_credentials, extra_params=sink_extra_params,
                                                    ssl_config=sink_ssl_config)

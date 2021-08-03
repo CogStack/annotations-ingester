@@ -30,6 +30,7 @@ Entries under `sink` key specify the ElasticSearch sink.
 
 #### Security and SSL certificates
 This only applies when ElasticSearch cluster is using X-Pack / Open Distro and requires secure connections with using SSL certificates. Under the key `source` and/or `sink` can be optionally specified `security` entry that will contain necessary configuration -- these are:
+' `ca-file-path` -- path to CA certificate file (PEM) used solely with SSL, (DO NOT USE THIS along with the other ca/client parameters mentioned underneath, use it solely)
 - `ca-certs-path` -- the path to CA certificates file (PEM),
 - `client-cert-path` -- the path to client certificate file (PEM),
 - `client-key-path` -- the path to client key (PEM).

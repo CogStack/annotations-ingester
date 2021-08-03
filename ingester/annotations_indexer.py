@@ -539,9 +539,10 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                     }
                   }
 
-        if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat-separate-index" or len(self.annotation_indexer_config.es_nested_object_schema_mapping) == 0:
+        if self.annotation_indexer_config.es_nested_object_schema_mapping.lower() == "medcat-separate-index":
           request_body = {
             "properties": {
+                    "dynamic" : "false",
                     "nlp": {
                       "properties": {
                         "acc": {
@@ -551,13 +552,8 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                           "type": "float"
                         },
                         "cui": {
-                          "type": "text",
-                          "fields": {
-                            "keyword": {
-                              "type": "keyword",
-                              "ignore_above": 256
-                            }
-                          }
+                          "type": "keyword",
+                          "ignore_above": 64
                         },
                         "detected_name": {
                           "type": "text",
@@ -569,10 +565,12 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                           }
                         },
                         "end": {
-                          "type": "long"
+                          "type" : "keyword",
+                          "store" : "true",
+                          "index" : "false"
                         },
                         "id": {
-                          "type": "long"
+                          "type": "keyword"
                         },
                         "meta_anns": {
                           "properties": {
@@ -622,16 +620,13 @@ class BatchAnnotationsIndexer(AnnotationsIndexer):
                           }
                         },
                         "start": {
-                          "type": "long"
+                          "type" : "keyword",
+                          "store" : "true",
+                          "index" : "false"
                         },
                         "tuis": {
-                          "type": "text",
-                          "fields": {
-                            "keyword": {
-                              "type": "keyword",
-                              "ignore_above": 256
-                            }
-                          }
+                          "type": "keyword",
+                          "ignore_above": 64
                         },
                         "types": {
                           "type": "text",
