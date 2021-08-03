@@ -1,49 +1,72 @@
 source:
   es:
-    hosts: ["https://cogstack:cogstack@localhost:9200"]
-    index-name: 'cogstack_observations_view'
-    extra_params:
-      use_ssl: False
-      verify_certs: False
+    hosts: ["http://127.0.0.1:9200"]
+    credentials:
+      username : "elastic"
+      password : "admin"
+      use-api-key : False
+    index-name: 'medical_reports_text'
+    extra-params:
+      use-ssl: False
+      verify-certs: False
     security:
+      ca-file-path : "/app/config/cert.pem"
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
       client-key-path: "/app/config/client.key"
 
 sink:
   es:
-    hosts: ["http://cogstack:cogstack@localhost:9200"]
-    index-name: 'cogstack_atomic_annotations'
-    extra_params:
-      use_ssl: False
-      verify_certs: False
+    hosts: ["http://127.0.0.1:9200"]
+    credentials:
+      username : "elastic"
+      password : "admin"
+      use-api-key : False
+    index-name: 'medical_reports_text_annotations'
+    extra-params:
+      use-ssl: False
+      verify-certs: False
     security:
+      ca-file-path : "/app/config/cert.pem"
       ca-certs-path: "/app/config/root-ca.pem"
       client-cert-path: "/app/config/client.pem"
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: 'http://localhost:8095/api/process'
+  endpoint-url: 'http://localhost:5555/api/process'
+  endpoint-request-mode : ''
+  use-bulk-indexing : True
+  annotation-response:
+    dict-key : "annotations"
+    result-key : "result"
+  credentials :  
+    username : ""
+    password : ""
 
 mapping:
+  index-ingest-mode:
+    same-index: False
+    use-nested-objects: False
+    es-nested-object-schema-mapping : ""
   source:
-    text-field: 'document_content'
-    docid-field: 'encounter_id'
+    text-field: 'document'
+    docid-field: '_id'
     persist-fields:
-      - 'encounter_id'
-      - 'patient_id'
-      - 'encounter_start'
-      - 'encounter_end'
+     - '_id'
     batch:
-      date-field: 'encounter_start'
+      date-field: 'dct'
       date-format: 'yyyy-MM-dd'
       python-date-format: '%Y-%m-%d' 
-      interval: 30 
-      date-start: '2010-01-01'
-      date-end: '2018-06-01'
+      interval: 30
+      date-start: '1999-01-01'
+      date-end: '2021-02-01'
       threads: 8
   sink:
-    split-index-by-field: 'type'
+    split-index-by-field: '' # 'type', splits into different indices with separate prefix
   nlp:
-    skip-processed-doc-check: 'true'
+    skip-processed-doc-check: True
     annotation-id-field: 'id'
+
+# DEBUG = 10 , INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50
+logging-level: "20"
+

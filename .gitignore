@@ -1,4 +1,11 @@
+# IDE
 .DS_Store
 .idea
+.vscode
+
+# python
 *.pyc
 venv
+__pycache__
+venv-test
+.mypy_cache
