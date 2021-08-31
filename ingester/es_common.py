@@ -3,7 +3,8 @@
 import elasticsearch
 import elasticsearch.helpers
 import logging
-from ssl import create_default_context
+import socket
+from ssl import Purpose, create_default_context
 import os
 
 ################################
@@ -94,7 +95,7 @@ class ElasticIndexer:
     """
 
     # the size of chunk when indexing documents in bulk
-    BULK_CHUNK_SIZE = 1000
+    BULK_CHUNK_SIZE = 10000
     BULK_REQUEST_TIMEOUT_S = 30
 
     def __init__(self, es_connector, index_name):
