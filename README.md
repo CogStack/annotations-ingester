@@ -45,7 +45,7 @@ Entires under the key `extra_params` are optional, useful for test cases or depl
     - `use-api-key` if this is enabled the username and password fields will be used as api_id and api_key 
 
 ### NLP service
-- `endpoint-url` 
+- `endpoint-url`, url that points othe REST api annotation service endpoint
 - `endpoint-request-mode` , this is either left empty, or in case of use with the GATE NLP Annie annotation service it should be set to `gate-nlp`
 - `use-bulk-indexing` ingest in bulk mode (1000 docs / bulk chunk), 
 
@@ -78,7 +78,7 @@ The sub-entry `sink` specifies additional options during sending the processed a
 
 The sub-entry `nlp` specifies additional options during processing the documents with NLP:
 - `skip-processed-doc-check` - whether to skip checking for already processed documents in ElasticSearch,
--  `annotation-id-field` - the name of field containing the annotation id returned from the NLP app.
+- `annotation-id-field` - the name of field containing the annotation id returned from the NLP app.
 
 # Missing
 - tests

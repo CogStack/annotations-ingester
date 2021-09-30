@@ -33,8 +33,7 @@ sink:
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: ["http://localhost:5551/api/process"]
-  
+  endpoint-url: ["http://localhost:5555/api/process"]
   endpoint-request-mode : "" # possible values: "gate-nlp", if empty, MedCAT is considered
   use-bulk-indexing : True
   annotation-response:

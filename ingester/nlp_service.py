@@ -1,11 +1,10 @@
 #!/usr/bin/python
 
-from typing import final
-import requests
-
+from datetime import datetime
 from ingester.utils import check_url_available
 import logging
 import json
+import requests
 
 ################################
 #
@@ -91,6 +90,9 @@ class NlpService:
         final_response = {}
 
         annotation_index = 0
+
+        current_timestamp = datetime.now().strftime("%H:%M:%S")
+
         for response in request_responses:
             if "result" in response.keys():
                 response["result"] = json.loads(response["result"])
@@ -109,7 +111,7 @@ class NlpService:
                         for i in range(len(tmp_ents[entity_type])):
                             annotation_indices = list(map(int, tmp_ents[entity_type][i]["indices"]))
 
-                            tmp_ents[entity_type][i].update({"type" : str(entity_type), "id" : annotation_index, "pipeline_url" : response["pipeline_url"],
+                            tmp_ents[entity_type][i].update({"type" : str(entity_type), "id" : annotation_index, "pipeline_url" : response["pipeline_url"], "timestamp" : current_timestamp,
                              "source_value" : response["text"][annotation_indices[0]:annotation_indices[1]]})
 
                             formatted_result[str(annotation_index)] = tmp_ents[entity_type][i]
