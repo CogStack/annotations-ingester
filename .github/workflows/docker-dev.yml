@@ -3,9 +3,9 @@ name: Docker
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ devel ]
   pull_request:
-    branches: [ master ]
+    branches: [ devel ]
     
   release:
     types: [published]
@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: cogstacksystems/annotations-ingester:latest
+          images: cogstacksystems/annotations-ingester:dev-latest
           
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
@@ -50,7 +50,7 @@ jobs:
           file : "Dockerfile"
           allow: network.host
           github-token: ${{ github.token }}
-          tags: cogstacksystems/annotations-ingester:latest
+          tags: cogstacksystems/annotations-ingester:dev-latest
           push : true
           labels: ${{ steps.meta.outputs.labels }}
           
