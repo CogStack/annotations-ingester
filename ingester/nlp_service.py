@@ -122,7 +122,7 @@ class NlpService:
                     if k in final_response.keys():
                         if type(v) is dict:
                             final_response[k].update(v)
-                    elif k is not "pipeline_url":
+                    elif k != "pipeline_url":
                         final_response[k] = v
         
         return final_response

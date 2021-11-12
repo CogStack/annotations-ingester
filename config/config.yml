@@ -2,7 +2,7 @@ source:
   es:
     hosts: ["http://127.0.0.1:9200"]
     credentials:
-      username : "elastic"
+      username : "admin"
       password : "admin"
       use-api-key : False
     index-name: "medical_reports_text"
@@ -19,7 +19,7 @@ sink:
   es:
     hosts: ["http://127.0.0.1:9200"]
     credentials:
-      username : "elastic"
+      username : "admin"
       password : "admin"
       use-api-key : False
     index-name: "medical_reports_text_annotations"
