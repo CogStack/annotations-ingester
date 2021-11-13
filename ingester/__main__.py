@@ -122,7 +122,7 @@ if __name__ == "__main__":
         exit(1)
 
     # set up the Elastic logger to be more verbose and run the indexer
-    logging.getLogger('elasticsearch').setLevel(level=logging.WARN)
+    logging.getLogger('elasticsearch').setLevel(int(config.params['logging-level']))
     
     indexer.index_range(batch_date_start=mapping['source']['batch']['date-start'],
                         batch_date_end=mapping['source']['batch']['date-end'])

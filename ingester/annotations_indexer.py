@@ -13,8 +13,6 @@ from dataclasses import dataclass
 import json
 import ast
 import re
-import demjson
-import dirtyjson
 import itertools
 
 @dataclass
@@ -241,7 +239,8 @@ class AnnotationsIndexer:
 
         self.log.info('Processing document with id: ' + src_doc_id)
         doc = self.annotation_indexer_config.source_indexer.get_doc(src_doc_id)
-        
+
+
         # check whether there is document content to process
         if (isinstance(doc, dict) and (self.annotation_indexer_config.source_text_field not in doc.keys() or doc[self.annotation_indexer_config.source_text_field] is None)) or \
           len(doc[self.annotation_indexer_config.source_text_field]) < self.MIN_TEXT_LEN:
