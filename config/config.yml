@@ -33,9 +33,10 @@ sink:
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: ["http://localhost:5555/api/process"]
+  endpoint-url: ["http://localhost:5000/api/process"]
   endpoint-request-mode : "" # possible values: "gate-nlp", if empty, MedCAT is considered
   use-bulk-indexing : True
+  max-retries-on-failure: 1 # how many times should the service attempt to request annotations
   annotation-response:
     dict-key : "annotations"
     result-key : "result"
@@ -47,7 +48,7 @@ mapping:
   index-ingest-mode:
     same-index: False
     use-nested-objects: False
-    es-nested-object-schema-mapping : "" # possible values: "medcat-separate-index", "medcat-nested-object", "gate-nlp-nested-object", "gate-nlp-separate-index" ,
+    es-nested-object-schema-mapping : "medcat-separate-index" # possible values: "medcat-separate-index", "medcat-nested-object", "gate-nlp-nested-object", "gate-nlp-separate-index" ,
   source:
     text-field: 'document'
     docid-field: '_id'

@@ -15,7 +15,7 @@ class NlpService:
     """
     The NLP service for querying the NLP REST API
     """
-    def __init__(self, url_endpoint, endpoint_request_mode, use_bulk_indexing, username, password):
+    def __init__(self, url_endpoint, endpoint_request_mode, use_bulk_indexing, username, password, max_number_of_retries=1):
         """
         :param url_endpoint: the full url endpoint to query
         """
@@ -27,7 +27,7 @@ class NlpService:
         self.username = username
         self.password = password
 
-        self.max_number_of_retries = 3 
+        self.max_number_of_retries = max_number_of_retries
     
         if type(self.url_endpoints) is not list:
             self.url_endpoints = [self.url_endpoints]

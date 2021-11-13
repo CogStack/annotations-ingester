@@ -75,7 +75,8 @@ if __name__ == "__main__":
           endpoint_request_mode=config.params['nlp-service']['endpoint-request-mode'],
           use_bulk_indexing=config.params['nlp-service']['use-bulk-indexing'],
           username=config.params['nlp-service']['credentials']['username'],
-          password=config.params['nlp-service']['credentials']['password'])
+          password=config.params['nlp-service']['credentials']['password'],
+          max_number_of_retries=config.params['nlp-service']['max-retries-on-failure'])
 
         # initialize the elastic sink
         sink_params = config.params['sink']
