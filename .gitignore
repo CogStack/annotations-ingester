@@ -8,5 +8,4 @@
 venv
 __pycache__
 venv-test
-
 .mypy_cache

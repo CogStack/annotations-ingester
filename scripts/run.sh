@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # wait for the services to get ready
 #
@@ -9,7 +9,6 @@ while IFS=',' read -ra ADDR; do
       ./wait_for_service.sh "$i" "--timeout=0" "--stdout"
   done
 done <<< $SERVICES_USED
-
 
 # run the pipeline
 #

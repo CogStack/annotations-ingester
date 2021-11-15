@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
-import requests
-
+from datetime import datetime
 from ingester.utils import check_url_available
 import logging
 import json
+import requests
+import traceback
 
 ################################
 #
@@ -14,22 +15,27 @@ class NlpService:
     """
     The NLP service for querying the NLP REST API
     """
-    def __init__(self, url_endpoint, endpoint_request_mode, use_bulk_indexing, username, password):
+    def __init__(self, url_endpoint, endpoint_request_mode, use_bulk_indexing, username, password, max_number_of_retries=1):
         """
         :param url_endpoint: the full url endpoint to query
         """
         self.log = logging.getLogger(self.__class__.__name__)
 
-        assert url_endpoint is not None and len(url_endpoint) > 0
-
-        if url_endpoint is None or len(url_endpoint) == 0 or not check_url_available(url_endpoint):
-            raise Exception("Cannot connect to the provided REST service endpoint")
-
         self.endpoint_request_mode = endpoint_request_mode
-        self.url_endpoint = url_endpoint
+        self.url_endpoints = url_endpoint
         self.use_bulk_indexing = use_bulk_indexing
         self.username = username
         self.password = password
+
+        self.max_number_of_retries = max_number_of_retries
+    
+        if type(self.url_endpoints) is not list:
+            self.url_endpoints = [self.url_endpoints]
+        
+        assert self.url_endpoints is not None and len(self.url_endpoints) > 0
+
+        if self.url_endpoints is None or len(self.url_endpoints) == 0 or not check_url_available(self.url_endpoints):
+            raise Exception("Cannot connect to the provided REST service endpoint")
 
     def query(self, text, metadata={}, application_params={}):
         """
@@ -40,47 +46,94 @@ class NlpService:
         :return: returns the full NLP service response
         """
 
-        if len(self.endpoint_request_mode) == 0:
-            query_body = {
-                "content": {
-                    "text": text
-                },
-                "application_params": application_params,   
-                "footer": metadata
-            }
-            response = requests.post(self.url_endpoint, json=query_body, headers={"Access-Control-Allow-Origin" : "*"}, auth=(self.username, self.password))
+        try:
+            headers = {"Access-Control-Allow-Origin" : "*", "Content-Type": "application/json"}
+            auth = (self.username, self.password)
+            query_body = {}
 
-        elif self.endpoint_request_mode == 'gate-nlp':
-            query_body = text
-            response = requests.post(self.url_endpoint, data=query_body, headers={"Access-Control-Allow-Origin" : "*", "Content-Type": "text/plain"}, auth=(self.username, self.password))
+            request_responses = []
+            final_response = {}
 
-        if response.status_code == 200:
-            response = response.json()
+            if len(self.endpoint_request_mode) == 0:
+                query_body = {
+                    "content": {
+                        "text": text
+                    },
+                    "application_params": application_params,   
+                    "footer": metadata
+                }
+                query_body = json.dumps(query_body)
 
-            if "result" in response.keys():
-                response["result"] = json.loads(response["result"])
-                if "medcat_info" in response.keys() and "annotations" in response["result"].keys():
-                    for k in response["result"]["annotations"]["entities"].keys():
-                        response["result"]["annotations"]["entities"][k].update(response["medcat_info"])
-                            
-            # Entities are present alone only when using GATE-NLP MODE ENDPOINT, they need formatting to match the MedCAT entities structure
-            if self.endpoint_request_mode == 'gate-nlp':
-                if "entities" in response.keys() and response["entities"] is not None:
-                    tmp_ents = response["entities"]
-                    formatted_result = {}
-                    for entity_type in tmp_ents.keys():
-                        for i in range(len(tmp_ents[entity_type])):
-                            tmp_ents[entity_type][i].update({"type" : str(entity_type), "id" : i})
-                            formatted_result[str(i)] = tmp_ents[entity_type][i]
-                    response["entities"] = formatted_result
+            elif self.endpoint_request_mode == 'gate-nlp':
+                query_body = text
+                headers = {"Access-Control-Allow-Origin" : "*", "Content-Type": "text/plain"}
 
-            return response
-        else:
-            self.log.warning("document did not return the correct response, status code: "
-            + str(response.content)
-            + str(response.status_code) + "  " + response.reason + "\n The document will be reprocessed at the next check")
+            for url in self.url_endpoints:
+                self.log.info("Requesting to " + url)
+                request = requests.post(url, data=query_body, headers=headers, auth=auth)
 
-        return {}
+                number_of_retries = 0
+
+                while(request.status_code != 200 and number_of_retries < self.max_number_of_retries):
+                    self.log.info("Request to " + url + " failed, retrying")
+                    request = requests.post(url, data=query_body, headers=headers, auth=auth)
+                    number_of_retries += 1
+
+                if request.status_code == 200:
+                    current_request = request.json()
+                    if self.endpoint_request_mode == 'gate-nlp' and current_request:
+                        current_request.update({"pipeline_url" : str(url)})
+                    if current_request:
+                        request_responses.append(current_request)
+                else:
+                    self.log.warning("document did not return the correct response, status code:"
+                    + str(request.content)
+                    + str(request.status_code) + "  " + request.reason + "\n The document will be reprocessed at the next check")
+                    request_responses.append({})
+
+
+
+            annotation_index = 0
+
+            current_timestamp = datetime.now().strftime("%H:%M:%S")
+
+            for response in request_responses:
+                if "result" in response.keys():
+                    if type(response["result"]) is not dict:
+                        response["result"] =json.loads(response["result"])
+
+                    if "medcat_info" in response.keys() and "annotations" in response["result"].keys():
+                        for k in response["result"]["annotations"]["entities"].keys():
+                            response["result"]["annotations"]["entities"][k].update(response["medcat_info"])
+                            response["result"]["annotations"]["entities"][k].update({"timestamp" : response["result"]["timestamp"]})
+                    final_response = response
+
+                # Entities are present alone only when using GATE-NLP MODE ENDPOINT, they need formatting to match the MedCAT entities structure
+                if self.endpoint_request_mode == 'gate-nlp':
+                    if "entities" in response.keys() and response["entities"] is not None:
+                        tmp_ents = response["entities"]
+                        formatted_result = {}
+                        for entity_type in tmp_ents.keys():
+                            for i in range(len(tmp_ents[entity_type])):
+                                annotation_indices = list(map(int, tmp_ents[entity_type][i]["indices"]))
+
+                                tmp_ents[entity_type][i].update({"type" : str(entity_type), "id" : annotation_index, "pipeline_url" : response["pipeline_url"], "timestamp" : current_timestamp,
+                                 "source_value" : response["text"][annotation_indices[0]:annotation_indices[1]]})
+
+                                formatted_result[str(annotation_index)] = tmp_ents[entity_type][i]
+                                annotation_index += 1
+                        response["entities"] = formatted_result
+
+                    for k, v in response.items():
+                        if k in final_response.keys():
+                            if type(v) is dict:
+                                final_response[k].update(v)
+                        elif k != "pipeline_url":
+                            final_response[k] = v
+
+            return final_response
+        except Exception:
+            logging.error(traceback.print_exc())
 
 
 ################################

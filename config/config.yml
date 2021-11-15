@@ -2,10 +2,10 @@ source:
   es:
     hosts: ["http://127.0.0.1:9200"]
     credentials:
-      username : "elastic"
+      username : "admin"
       password : "admin"
       use-api-key : False
-    index-name: 'medical_reports_text'
+    index-name: "medical_reports_text"
     extra-params:
       use-ssl: False
       verify-certs: False
@@ -19,10 +19,10 @@ sink:
   es:
     hosts: ["http://127.0.0.1:9200"]
     credentials:
-      username : "elastic"
+      username : "admin"
       password : "admin"
       use-api-key : False
-    index-name: 'medical_reports_text_annotations'
+    index-name: "medical_reports_text_annotations"
     extra-params:
       use-ssl: False
       verify-certs: False
@@ -33,9 +33,10 @@ sink:
       client-key-path: "/app/config/client.key"
 
 nlp-service:
-  endpoint-url: 'http://localhost:5555/api/process'
-  endpoint-request-mode : ''
+  endpoint-url: ["http://localhost:5000/api/process"]
+  endpoint-request-mode : "" # possible values: "gate-nlp", if empty, MedCAT is considered
   use-bulk-indexing : True
+  max-retries-on-failure: 1 # how many times should the service attempt to request annotations
   annotation-response:
     dict-key : "annotations"
     result-key : "result"
@@ -47,7 +48,7 @@ mapping:
   index-ingest-mode:
     same-index: False
     use-nested-objects: False
-    es-nested-object-schema-mapping : ""
+    es-nested-object-schema-mapping : "medcat-separate-index" # possible values: "medcat-separate-index", "medcat-nested-object", "gate-nlp-nested-object", "gate-nlp-separate-index" ,
   source:
     text-field: 'document'
     docid-field: '_id'
@@ -62,9 +63,9 @@ mapping:
       date-end: '2021-02-01'
       threads: 8
   sink:
-    split-index-by-field: '' # 'type', splits into different indices with separate prefix
+    split-index-by-field: "" # 'type', splits into different indices with separate prefix
   nlp:
-    skip-processed-doc-check: True
+    skip-processed-doc-check: False
     annotation-id-field: 'id'
 
 # DEBUG = 10 , INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50

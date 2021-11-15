@@ -75,7 +75,8 @@ if __name__ == "__main__":
           endpoint_request_mode=config.params['nlp-service']['endpoint-request-mode'],
           use_bulk_indexing=config.params['nlp-service']['use-bulk-indexing'],
           username=config.params['nlp-service']['credentials']['username'],
-          password=config.params['nlp-service']['credentials']['password'])
+          password=config.params['nlp-service']['credentials']['password'],
+          max_number_of_retries=config.params['nlp-service']['max-retries-on-failure'])
 
         # initialize the elastic sink
         sink_params = config.params['sink']
@@ -122,7 +123,7 @@ if __name__ == "__main__":
         exit(1)
 
     # set up the Elastic logger to be more verbose and run the indexer
-    logging.getLogger('elasticsearch').setLevel(level=logging.WARN)
+    logging.getLogger('elasticsearch').setLevel(int(config.params['logging-level']))
     
     indexer.index_range(batch_date_start=mapping['source']['batch']['date-start'],
                         batch_date_end=mapping['source']['batch']['date-end'])
