@@ -61,7 +61,7 @@ mapping:
       interval: 30
       date-start: '1999-01-01'
       date-end: '2021-02-01'
-      threads: 8
+      threads: 128
   sink:
     split-index-by-field: "" # 'type', splits into different indices with separate prefix
   nlp:

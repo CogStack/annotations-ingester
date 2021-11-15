@@ -6,6 +6,6 @@ services:
     restart: always
     volumes:
       - ./config/config.yml:/app/config/config.yml:ro
-    network_mode: host
     command: "/app/run.sh"
+    network_mode: host
     
