@@ -1,3 +1,10 @@
+# Important
+
+The project although maintained it will not be further developed as NiFi workflows are a better alternative. Please see [NiFi](https://github.com/CogStack/CogStack-NiFi) and its relevant [workflows](https://cogstack-nifi.readthedocs.io/en/latest/deploy/workflows.html#annotating-free-text-documents-db-es).
+
+Feel free to ask questions on the github issue tracker or on our [discourse website](https://discourse.cogstack.org) which is frequently used by our development team!
+<br>
+
 # Introduction
 
 This simple application implements an ingestion process to: 
@@ -6,7 +13,6 @@ This simple application implements an ingestion process to:
 - send the annotations with selected metadata to specified ElasticSearch sink.
 
 The ingestion parameters (source, sink, fields mapping, etc.) can be set in `config.yml` file (in `config` directory).
-
 
 # Usage
 
